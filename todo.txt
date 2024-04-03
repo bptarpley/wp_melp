@@ -1,0 +1,4 @@
+address missing images: http://localhost:8080/letters/Edgeworth_ Princeton_1800-01.xml/
+
+address missing composition date for sequential http://localhost:8080/letters/Edgeworth_Huntington_XXXX_1827_05_10.xml/
+

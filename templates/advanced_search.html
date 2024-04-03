@@ -1,0 +1,74 @@
+<h2>Search All Letters</h2>
+
+<div id="adv-search-bar">
+  <input id="adv-search-box" type="text" />
+  <button id="adv-search-button" type="button">Search</button>
+</div>
+<div id="adv-search-type-bar">
+  <span><input id="adv-search-type-metadata" type="radio" name="search-type" checked> <label for="adv-search-type-metadata">Letters and metadata</label></span>
+  <span><input id="adv-search-type-letters" type="radio" name="search-type"> <label for="adv-search-type-letters">Letters only</label></span>
+</div>
+
+<div id="adv-search-filter-and-results">
+  <div id="adv-search-filter">
+    <!-- DATE FILTER -->
+    <details>
+      <summary>Dates</summary>
+      <label>Date From</label>
+      <div class="adv-date-search-bar">
+        <input id="adv-search-date-from-year-box" class="four-num-box" placeholder="1700" max="2000" type="number" />
+        <input id="adv-search-date-from-month-box" class="two-num-box" placeholder="01" max="12" type="number" />
+        <input id="adv-search-date-from-day-box" class="two-num-box" placeholder="01" max="31" type="number" />
+      </div>
+
+      <label>Date To</label>
+      <div class="adv-date-search-bar">
+        <input id="adv-search-date-to-year-box" class="four-num-box" placeholder="1899" max="2000" type="number" />
+        <input id="adv-search-date-to-month-box" class="two-num-box" placeholder="12" max="12" type="number" />
+        <input id="adv-search-date-to-day-box" class="two-num-box" placeholder="31" max="31" type="number" />
+      </div>
+    </details>
+
+    <!-- PEOPLE FILTER -->
+    <details>
+      <summary>People</summary>
+      <select id="adv-search-people-filter" class="filter-box" name="people[]" multiple="multiple"></select>
+    </details>
+
+    <!-- WORKS FILTER -->
+    <details>
+      <summary>Works</summary>
+      <select id="adv-search-work-filter" class="filter-box" name="works[]" multiple="multiple"></select>
+    </details>
+
+    <!-- PLACES FILTER -->
+    <details>
+      <summary>Places</summary>
+      <select id="adv-search-place-filter" class="filter-box" name="places[]" multiple="multiple"></select>
+    </details>
+
+    <!-- REPOSITORY FILTER -->
+    <details>
+      <summary>Repository</summary>
+      <select id="adv-search-repo-filter" class="filter-box" name="repos[]" multiple="multiple"></select>
+    </details>
+
+    <button type="button" id="adv-search-clear-filter-button">Clear All Filters</button>
+  </div>
+  <div id="adv-search-results-container">
+    <div id="adv-search-results-meta-bar">
+      <select id="adv-search-sort-box">
+        <option value="asc">Sort By: Date (earliest first)</option>
+        <option value="desc">Sort By: Date (latest first)</option>
+      </select>
+
+      <span id="adv-search-count-bar">
+        Showing <span id="adv-search-current-result">1</span> out of <span id="adv-search-total-results"></span>
+      </span>
+    </div>
+
+    <div id="adv-search-results">
+
+    </div>
+  </div>
+</div>
