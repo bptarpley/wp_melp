@@ -63,6 +63,7 @@
 		wp_enqueue_style('melp-leaflet-css', plugin_dir_url( __FILE__ ).'css/leaflet/leaflet.css');
 		wp_enqueue_style('melp-leaflet-cluster-css', plugin_dir_url( __FILE__ ).'css/MarkerCluster.css');
 		wp_enqueue_style('melp-css', plugin_dir_url( __FILE__ ).'css/melp.css');
+		wp_enqueue_style('melp-mobile-css', plugin_dir_url( __FILE__ ).'css/melp_mobile.css');
 	}
 
 	function melp_corpora_inject_footer()

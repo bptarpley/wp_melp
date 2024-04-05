@@ -7,6 +7,10 @@ class MELP {
         this.params = this.get_request_parameters()
         this.plugin_url = plugin_url
         this.iiif_prefix = iiif_prefix
+        this.screen_size = window.innerWidth
+        this.breakpoints = {
+            mobile: 767
+        }
 
         // 'this' helper
         let sender = this
@@ -18,6 +22,7 @@ class MELP {
             'nav.html',
             function() {
                 let nav = new Nav(sender, nav_container)
+                sender.adjust_for_screen_size()
             }
         )
 
@@ -78,7 +83,7 @@ class MELP {
         let footer_container = jQuery('#footer-container')
         if (footer_container.length) this.load_template(footer_container, 'footer.html', null, true)
 
-
+        jQuery(window).on('resize', function() { sender.adjust_for_screen_size() })
     }
 
     make_request(path, type, params={}, callback, inject_host=true, spool=false, spool_records=[]) {
@@ -320,6 +325,41 @@ class MELP {
             if (callback) callback()
         })
     }
+
+    adjust_for_screen_size() {
+        let last_screen_size = this.screen_size
+        let last_breakpoint = last_screen_size > this.breakpoints.mobile ? 'desktop' : 'mobile'
+        this.screen_size = window.innerWidth
+        let breakpoint = this.screen_size > this.breakpoints.mobile ? 'desktop' : 'mobile'
+
+
+        let nav_search_button = jQuery('#nav-search-button')
+
+        if (breakpoint === 'desktop' && last_breakpoint === 'mobile') {
+            // fix nav search button
+            jQuery('#nav-search-button').html('Search Letters')
+
+            // fix letter carousel thumbnails
+            jQuery('.letter-carousel-thumbnail').each(function() {
+                let thumb = jQuery(this)
+                let src = thumb.attr('src')
+                thumb.attr('src', src.replace('square/330,', 'full/,200'))
+            })
+        }
+        else if (breakpoint === 'mobile') {
+            // fix nav search button
+            jQuery('#nav-search-button').html('Search')
+
+            // fix letter carousel thumbnails
+            jQuery('.letter-carousel-thumbnail').each(function() {
+                let thumb = jQuery(this)
+                let src = thumb.attr('src')
+                thumb.attr('src', src.replace('full/,200', 'square/330,'))
+            })
+
+        }
+
+    }
 }
 
 class Nav {
@@ -410,12 +450,15 @@ class LetterCarousel {
                     let html = `<div id="${sender.identifier}-slider" class="letter-carousel-slider">`
                     if (element.data('skip_first') && data.records.length) data.records.shift()
 
+                    let image_size_specifier = 'full/,200'
+                    if (sender.melp.screen_size <= sender.melp.breakpoints.mobile) image_size_specifier = 'square/330,'
+
                     data.records.forEach((letter, letter_index) => {
-                        let image_url = `${sender.melp.iiif_prefix}%2F${letter.identifier}%2F${letter.images[0]}/full/,200/0/default.jpg`
+                        let image_url = `${sender.melp.iiif_prefix}%2F${letter.identifier}%2F${letter.images[0]}/${image_size_specifier}/0/default.jpg`
                         let letter_url = `/letters/${letter.identifier}`
                         html += `
                             <div id="${sender.identifier}-letter-${letter_index}" class="letter-carousel-item" data-letter-identifier="${letter.identifier}">
-                              <a href="${letter_url}"><img src="${image_url}" class="letter-carousel-thumbnail"></a>
+                              <a class="letter-carousel-thumbnail-link" href="${letter_url}"><img src="${image_url}" class="letter-carousel-thumbnail"></a>
                               <a href="${letter_url}"><label class="letter-carousel-label">${letter.title}</label></a>
                             </div>
                         `

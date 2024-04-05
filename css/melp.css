@@ -156,7 +156,7 @@ details > summary::before {
     font-weight: 700;
     word-wrap: break-word;
     height: 60px;
-    width: 320px;
+    max-width: 320px;
     margin: 0px;
 }
 
@@ -225,20 +225,20 @@ details > summary::before {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 814px;
+    max-width: 814px;
     background-color: lightgray;
     border-radius: 200px;
 }
 
 #masthead-title-and-description #nav-title {
-    width: 606px;
+    max-width: 606px;
     font-size: 56px;
     text-align: center;
     height: unset;
 }
 
 #masthead-title-and-description p {
-    width: 814px;
+    max-width: 814px;
     text-align: center;
     font-size: 22px;
     font-weight: 400;
