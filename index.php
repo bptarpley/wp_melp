@@ -72,6 +72,7 @@
 	    $corpus_id = getenv('MELP_CORPUS_ID');
 	    $corpora_token = getenv('MELP_TOKEN');
 	    $iiif_prefix = getenv('MELP_IIIF_PREFIX');
+	    $github_prefix = getenv('MELP_GITHUB_PREFIX');
 
 	    if (!$corpora_token) {
 	        $corpora_token = '';
@@ -84,12 +85,13 @@
 
 			jQuery(document).ready(function($)
 			{
-				tap = new MELP(
+				melp = new MELP(
 				    '<?=$corpora_host?>',
 				    '<?=$corpora_token?>',
 				    '<?=$corpus_id?>',
 				    plugin_url,
-				    '<?=$iiif_prefix?>'
+				    '<?=$iiif_prefix?>',
+				    '<?=$github_prefix?>'
                 )
 			});
 		</script>	

@@ -1,5 +1,5 @@
 class MELP {
-    constructor(corpora_host, corpora_token, melp_corpus_id, plugin_url, iiif_prefix) {
+    constructor(corpora_host, corpora_token, melp_corpus_id, plugin_url, iiif_prefix, github_prefix) {
         this.host = corpora_host
         this.token = corpora_token
         this.corpus_id = melp_corpus_id
@@ -7,10 +7,14 @@ class MELP {
         this.params = this.get_request_parameters()
         this.plugin_url = plugin_url
         this.iiif_prefix = iiif_prefix
-        this.screen_size = window.innerWidth
+        this.github_prefix = github_prefix
         this.breakpoints = {
             mobile: 767
         }
+        this.medium = this.determine_medium()
+        this.nav = null
+        this.advanced_search = null
+        this.letter_viewer = null
 
         // 'this' helper
         let sender = this
@@ -21,9 +25,10 @@ class MELP {
             nav_container,
             'nav.html',
             function() {
-                let nav = new Nav(sender, nav_container)
+                sender.nav = new Nav(sender, nav_container)
                 sender.adjust_for_screen_size()
-            }
+            },
+            true
         )
 
         // BROWSE BY MENU
@@ -57,13 +62,14 @@ class MELP {
         let advanced_search_container = jQuery('#advanced-search-container')
         if (advanced_search_container.length) {
             if (this.params.path.length) {
-                let letter_id = this.params.path[0]
+                let letter_id = this.params.path[0].replaceAll('%20', ' ')
                 advanced_search_container.addClass('letter-viewer-container')
                 this.load_template(
                     advanced_search_container,
                     'letter_viewer.html',
                     function() {
-                        let letter_viewer = new LetterViewer(sender, letter_id)
+                        sender.letter_viewer = new LetterViewer(sender, letter_id)
+                        sender.adjust_for_screen_size()
                     },
                     true
                 )
@@ -73,15 +79,17 @@ class MELP {
                     advanced_search_container,
                     'advanced_search.html',
                     function () {
-                        let adv_search = new AdvancedSearch(sender)
-                    }
+                        sender.advanced_search = new AdvancedSearch(sender)
+                        sender.adjust_for_screen_size()
+                    },
+                    true
                 )
             }
         }
 
         // FOOTER
         let footer_container = jQuery('#footer-container')
-        if (footer_container.length) this.load_template(footer_container, 'footer.html', null, true)
+        if (footer_container.length) this.load_template(footer_container, 'footer.html', function() { sender.adjust_for_screen_size() }, true)
 
         jQuery(window).on('resize', function() { sender.adjust_for_screen_size() })
     }
@@ -326,18 +334,23 @@ class MELP {
         })
     }
 
-    adjust_for_screen_size() {
-        let last_screen_size = this.screen_size
-        let last_breakpoint = last_screen_size > this.breakpoints.mobile ? 'desktop' : 'mobile'
-        this.screen_size = window.innerWidth
-        let breakpoint = this.screen_size > this.breakpoints.mobile ? 'desktop' : 'mobile'
+    determine_medium() {
+        let screen_size = window.innerWidth
+        return screen_size > this.breakpoints.mobile ? 'desktop' : 'mobile'
+    }
 
+    adjust_for_screen_size() {
+        let last_medium = this.medium
+        this.medium = this.determine_medium()
 
         let nav_search_button = jQuery('#nav-search-button')
 
-        if (breakpoint === 'desktop' && last_breakpoint === 'mobile') {
-            // fix nav search button
-            jQuery('#nav-search-button').html('Search Letters')
+        if (this.medium === 'desktop' && last_medium === 'mobile') {
+            // fix nav
+            nav_search_button.html('Search Letters')
+            if (this.path !== '/') this.nav.nav_search.appendTo(this.nav.nav_container)
+
+            this.nav.nav_menu.appendTo(this.nav.nav_container)
 
             // fix letter carousel thumbnails
             jQuery('.letter-carousel-thumbnail').each(function() {
@@ -346,9 +359,15 @@ class MELP {
                 thumb.attr('src', src.replace('square/330,', 'full/,200'))
             })
         }
-        else if (breakpoint === 'mobile') {
-            // fix nav search button
-            jQuery('#nav-search-button').html('Search')
+        else if (this.medium === 'mobile') {
+            // fix nav
+            console.log('mobile adjustments...')
+            this.nav.nav_menu.appendTo(this.nav.hamburger_nav_container)
+            nav_search_button.html('Search')
+            if (this.path !== '/') {
+                console.log('moving search bar...')
+                this.nav.nav_search.appendTo(this.nav.hamburger_search_container)
+            }
 
             // fix letter carousel thumbnails
             jQuery('.letter-carousel-thumbnail').each(function() {
@@ -357,6 +376,16 @@ class MELP {
                 thumb.attr('src', src.replace('full/,200', 'square/330,'))
             })
 
+            // fix advanced search
+            if (this.path === '/letters/') {
+                let search_and_filter_div = jQuery('#adv-search-modal-search-and-filter-div')
+                if (search_and_filter_div.length) {
+                    jQuery('#adv-search-box').appendTo(search_and_filter_div)
+                    jQuery('#adv-search-type-bar').appendTo(search_and_filter_div)
+                    jQuery('#adv-search-filter').appendTo(search_and_filter_div)
+                    jQuery('#adv-search-button').html(`<img src="${this.plugin_url}img/icon_filter.png"> Search & Filter`)
+                }
+            }
         }
 
     }
@@ -366,59 +395,94 @@ class Nav {
     constructor(melp_instance, element) {
         this.melp = melp_instance
         this.element = element
-        let nav_container = jQuery('#nav-container')
-        let nav_search = jQuery('#nav-search')
-        let nav_search_box = jQuery('#nav-search-bar')
-        let nav_search_button = jQuery('#nav-search-button')
-        let nav_title = jQuery('#nav-title')
-        let masthead = jQuery('#masthead')
-        let masthead_title_and_description = jQuery('#masthead-title-and-description')
-        let masthead_project_description = jQuery('#masthead-project-description')
-        let masthead_byline = jQuery('#masthead-byline')
+        this.nav_container = jQuery('#nav-container')
+        this.nav_search = jQuery('#nav-search')
+        this.nav_search_box = jQuery('#nav-search-bar')
+        this.nav_search_button = jQuery('#nav-search-button')
+        this.nav_title = jQuery('#nav-title')
+        this.nav_menu = jQuery('#nav-menu')
+        this.masthead = jQuery('#masthead')
+        this.masthead_title_and_description = jQuery('#masthead-title-and-description')
+        this.masthead_project_description = jQuery('#masthead-project-description')
+        this.masthead_byline = jQuery('#masthead-byline')
+
+        this.hamburger_modal = jQuery('#hamburger-modal')
+        this.hamburger_open_button = jQuery('#hamburger-open-button')
+        this.hamburger_close_button = jQuery('#hamburger-close-button')
+        this.hamburger_title_container = jQuery('#hamburger-title-container')
+        this.hamburger_search_container = jQuery('#hamburger-search-container')
+        this.hamburger_nav_container = jQuery('#hamburger-nav-container')
+        this.hamburger_footer_container = jQuery('#hamburger-footer-container')
+
         let sender = this
 
-        nav_search_box.keyup(function(e) {
-            if (e.key === 'Enter' && nav_search_box.val().length) {
-                window.location.href = `/letters/?search=${nav_search_box.val()}`
+        sender.nav_search_box.keyup(function(e) {
+            if (e.key === 'Enter' && sender.nav_search_box.val().length) {
+                window.location.href = `/letters/?search=${sender.nav_search_box.val()}`
             }
         })
-        nav_search_button.click(function() {
-            if (nav_search_box.val().length) {
-                window.location.href = `/letters/?search=${nav_search_box.val()}`
+        sender.nav_search_button.click(function() {
+            if (sender.nav_search_box.val().length) {
+                window.location.href = `/letters/?search=${sender.nav_search_box.val()}`
             }
+        })
+
+        this.hamburger_open_button.click(function() {
+            sender.open_hamburger()
+        })
+        this.hamburger_close_button.click(function() {
+            sender.close_hamburger()
         })
 
         if (sender.melp.path === '/') {
             // cleanup
-            sender.melp.clean_elementor_widget(masthead_project_description)
-            sender.melp.clean_elementor_widget(masthead_byline)
+            sender.melp.clean_elementor_widget(sender.masthead_project_description)
+            sender.melp.clean_elementor_widget(sender.masthead_byline)
 
-            if (masthead.length && nav_title.length && nav_search.length && masthead_project_description.length && masthead_byline.length) {
-                nav_title.appendTo(masthead_title_and_description)
-                masthead_project_description.contents().appendTo(masthead_title_and_description)
+            if (sender.masthead.length && sender.nav_title.length && sender.nav_search.length && sender.masthead_project_description.length && sender.masthead_byline.length) {
+                sender.nav_title.appendTo(sender.masthead_title_and_description)
+                sender.masthead_project_description.contents().appendTo(sender.masthead_title_and_description)
 
-                masthead.append(`
+                sender.masthead.append(`
                     <a id="masthead-about-button" href="/about">About the Project</a>
                 `)
 
-                masthead_byline.contents().appendTo(masthead)
-                nav_search.appendTo(masthead)
+                sender.masthead_byline.contents().appendTo(sender.masthead)
+                sender.nav_search.appendTo(sender.masthead)
 
-                nav_container.css('justify-content', 'end')
+                sender.nav_container.css('justify-content', 'end')
             }
         } else if (sender.melp.path.startsWith('/about')) {
             jQuery('#nav-menu-about').addClass('current')
         } else if (sender.melp.path.startsWith('/letters')) {
             jQuery('#nav-menu-current').addClass('current')
             if (sender.melp.path === '/letters/') {
-                nav_search.hide()
-                nav_title.css('margin-right', 'auto')
+                sender.nav_search.hide()
+                sender.nav_title.css('margin-right', 'auto')
             }
         } else if (sender.melp.path.startsWith('/locations')) {
             jQuery('#nav-menu-locations').addClass('current')
         }
 
         jQuery('.delete-after-load').remove()
+    }
+
+    open_hamburger() {
+        this.hamburger_modal.css('display', 'flex')
+        this.nav_title.prependTo(this.hamburger_title_container)
+        jQuery('#footer-copyright').appendTo(this.hamburger_footer_container)
+        if (this.melp.path === '/') this.nav_search.appendTo(this.hamburger_search_container)
+    }
+
+    close_hamburger() {
+        this.hamburger_modal.css('display', 'none')
+
+        if (this.melp.path === '/') {
+            this.nav_title.prependTo(this.masthead_title_and_description)
+            this.nav_search.appendTo(this.masthead)
+        } else {
+            this.nav_title.prependTo(this.nav_container)
+        }
     }
 }
 
@@ -562,13 +626,20 @@ class AdvancedSearch {
         }
         this.next_page_threshold = 0
         this.resetting_filters = false
+        this.loaded_filters = []
         this.people = []
         this.works = []
         this.places = []
         this.repos = []
         this.search_box = jQuery('#adv-search-box')
+        this.search_modal = jQuery('#adv-search-modal')
 
         let search_button = jQuery('#adv-search-button')
+        let apply_filters_button = jQuery('#adv-search-modal-apply-button')
+        let modal_close_button = jQuery('#adv-search-modal-close-button')
+        let sort_select_box = jQuery('#adv-search-sort-box')
+
+        let filter_div = jQuery('#adv-search-filter')
         let people_filter = jQuery('#adv-search-people-filter')
         let work_filter = jQuery('#adv-search-work-filter')
         let place_filter = jQuery('#adv-search-place-filter')
@@ -606,9 +677,23 @@ class AdvancedSearch {
         this.search_box.keyup(function(e) {
             if (e.key === 'Enter') {
                 sender.load_results(true)
+                sender.search_modal.css('display', 'none')
             }
         })
         search_button.click(function() {
+            if (sender.melp.determine_medium() === 'desktop') sender.load_results(true)
+            else sender.show_search_modal()
+        })
+        apply_filters_button.click(function() {
+            sender.load_results(true)
+            sender.search_modal.css('display', 'none')
+        })
+        modal_close_button.click(function() {
+            sender.search_modal.css('display', 'none')
+        })
+        sort_select_box.change(function() {
+            let sorter = jQuery(this)
+            sender.criteria.s_date_composed = sorter.val()
             sender.load_results(true)
         })
 
@@ -622,7 +707,11 @@ class AdvancedSearch {
                     data.records.forEach(person => {
                         people_filter.append(`<option value="${person.xml_id}">${person.name}</option>`)
                     })
-                    people_filter.select2({'placeholder': 'Select a person...', width: '100%'})
+                    people_filter.select2({
+                        placeholder: 'Select a person...',
+                        dropdownParent: filter_div,
+                        width: '100%'
+                    })
 
                     people_filter.change(function() {
                         let people_requested = people_filter.val()
@@ -659,6 +748,7 @@ class AdvancedSearch {
                         if (!sender.resetting_filters) sender.load_results(true)
                     })
                 }
+                sender.loaded_filters.push('people')
             },
             true,
             true
@@ -674,7 +764,11 @@ class AdvancedSearch {
                     data.records.forEach(work => {
                         work_filter.append(`<option value="${work.xml_id}">${work.name}</option>`)
                     })
-                    work_filter.select2({'placeholder': 'Select a work...', width: '100%'})
+                    work_filter.select2({
+                        placeholder: 'Select a work...',
+                        dropdownParent: filter_div,
+                        width: '100%'
+                    })
 
                     work_filter.change(function() {
                         let works_requested = work_filter.val()
@@ -704,6 +798,7 @@ class AdvancedSearch {
                         if (!sender.resetting_filters) sender.load_results(true)
                     })
                 }
+                sender.loaded_filters.push('works')
             },
             true,
             true
@@ -719,7 +814,11 @@ class AdvancedSearch {
                     data.records.forEach(place => {
                         place_filter.append(`<option value="${place.xml_id}">${place.name}</option>`)
                     })
-                    place_filter.select2({'placeholder': 'Select a place...', width: '100%'})
+                    place_filter.select2({
+                        placeholder: 'Select a place...',
+                        dropdownParent: filter_div,
+                        width: '100%'
+                    })
 
                     place_filter.change(function() {
                         let places_requested = place_filter.val()
@@ -749,6 +848,7 @@ class AdvancedSearch {
                         if (!sender.resetting_filters) sender.load_results(true)
                     })
                 }
+                sender.loaded_filters.push('places')
             },
             true,
             true
@@ -764,7 +864,11 @@ class AdvancedSearch {
                     data.records.forEach(repo => {
                         repo_filter.append(`<option value="${repo.id}">${repo.name}</option>`)
                     })
-                   repo_filter.select2({'placeholder': 'Select a repository...', width: '100%'})
+                   repo_filter.select2({
+                       placeholder: 'Select a repository...',
+                       dropdownParent: filter_div,
+                       width: '100%'
+                   })
 
                     repo_filter.change(function() {
                         let repos_requested = repo_filter.val()
@@ -794,6 +898,7 @@ class AdvancedSearch {
                         if (!sender.resetting_filters) sender.load_results(true)
                     })
                 }
+                sender.loaded_filters.push('repos')
             },
             true,
             true
@@ -876,6 +981,15 @@ class AdvancedSearch {
         )
     }
 
+    async rebuild_filter_boxes() {
+        while (this.loaded_filters.length < 4) await new Promise(resolve => setTimeout(resolve, 2000))
+        jQuery('.filter-box').each(function() {
+            let box = jQuery(this)
+            box.select2('destroy')
+            box.select2({'placeholder': `Select a ${box.data('type_label')}...`, width: '100%'})
+        })
+    }
+
     add_criteria(key, value) {
         if (key in this.criteria) {
             let current_values = this.criteria[key].split('__')
@@ -894,6 +1008,10 @@ class AdvancedSearch {
             else this.criteria[key] = current_values.join('__')
         }
     }
+
+    show_search_modal() {
+        this.search_modal.css('display', 'flex')
+    }
 }
 
 
@@ -901,7 +1019,8 @@ class LetterViewer {
     constructor(melp_instance, letter_id) {
         this.melp = melp_instance
         this.letter_viewer = null
-        this.thumbnails = []
+        this.previous_letter = null
+        this.next_letters = []
         this.thumbnail_div = jQuery('#letter-image-thumbs')
         this.viewer_div = jQuery('#letter-image-viewer')
         this.transcript_div = jQuery('#letter-transcript-viewer')
@@ -915,84 +1034,123 @@ class LetterViewer {
         let sender = this
 
         this.melp.make_request(
-            `/api/corpus/${this.melp.corpus_id}/Letter/?f_identifier=${letter_id}`,
+            `/api/corpus/${this.melp.corpus_id}/Letter/`,
             'GET',
-            {},
-            function(data) {
-                if (data.records && data.records.length === 1) {
-                    let letter = data.records[0]
-
-                    // set title
-                    jQuery('#letter-title').html(letter.title)
-
-                    // set metadata fields
-                    jQuery('#letter-metadata-author').html(letter.author ? letter.author.name : 'N/A')
-                    jQuery('#letter-metadata-transcriber').html('N/A')
-                    jQuery('#letter-metadata-repository').html(letter.repository ? letter.repository.name : 'N/A')
-                    jQuery('#letter-metadata-recipient').html(letter.recipient ? letter.recipient.name : 'N/A')
-                    jQuery('#letter-metadata-first-edition-date').html('N/A')
-                    jQuery('#letter-metadata-collection').html('N/A')
-                    jQuery('#letter-metadata-written-date').html(letter.date_composed ? letter.date_composed : 'N/A')
-                    jQuery('#letter-metadata-general-editors').html('N/A')
-
-                    // build thumbnails
-                    letter.images.forEach((image, image_index) => {
-                        sender.thumbnail_div.append(`
-                            <img class="letter-thumbnail"
-                            alt="Click to show page ${image_index + 1}"
-                            src="https://iiif.dh.tamu.edu/iiif/2/MELP%2F${letter.identifier}%2F${image}/full/,110/0/default.jpg"
-                            data-image_no="${image_index}"
-                            data-iiif_identifier="https://iiif.dh.tamu.edu/iiif/2/MELP%2F${letter.identifier}%2F${image}">
-                        `)
-                    })
-
-                    // inject transcription and identify page breaks
-                    sender.transcript_div.prepend(letter.html)
-                    sender.pbs = jQuery('.page-break')
-
-                    // setup "up next" carousel
-                    let carousel_container = jQuery('#letter-up-next-carousel')
-                    carousel_container.attr('data-search_r_date_composed', `${letter.date_composed}to`)
-                    let carousel = new LetterCarousel(sender.melp, carousel_container)
-
-                    // rig up thumbnail click event
-                    jQuery('.letter-thumbnail').click(function () {
-                        sender.show_letter_image(jQuery(this).data('image_no'))
-                    })
-
-                    // determine when the letter image should change while scrolling through letter
-                    let page_rollover_threshold = {
-                        start: sender.transcript_div.offset().top,
-                        end: sender.transcript_div.offset().top + 100
-                    }
-
-                    // rig up transcript scroll event to catch page rollor
-                    sender.transcript_div.scroll(e => {
-                        let current_pb_y = sender.pbs.first().offset().top
-                        if (current_pb_y > sender.last_pb_y) sender.current_scroll_direction = "up"
-                        else sender.current_scroll_direction = "down"
-                        sender.last_pb_y = current_pb_y
-
-                        sender.pbs.each(function () {
-                            let pb = jQuery(this)
-                            let pb_y = pb.offset().top
-                            if (pb_y >= page_rollover_threshold.start && pb_y <= page_rollover_threshold.end) {
-                                let modifier = 1
-                                if (sender.current_scroll_direction === "up") modifier = 2
-
-                                sender.next_page = parseInt(pb.data('page')) - modifier
-                                if (sender.next_page < 0) sender.next_page = 0
-                            }
-                        })
-
-                        if (sender.next_page > -1 && sender.next_page !== sender.current_page) {
-                            sender.show_letter_image(sender.next_page)
+            {s_date_composed: 'asc', only: 'identifier', 'page-size': 1000},
+            function(sorted_identifiers) {
+                if (sorted_identifiers.records) {
+                    let last_letter = null
+                    let current_found = false
+                    console.log(letter_id)
+                    sorted_identifiers.records.forEach(l => {
+                        if (l.identifier === letter_id) {
+                            sender.previous_letter = last_letter
+                            current_found = true
                         }
+                        else if (current_found && sender.next_letters.length < 2) sender.next_letters.push(l.identifier)
+                        else last_letter = l.identifier
                     })
-
-                    // show the first page image
-                    sender.show_letter_image(0)
+                    console.log(sender.previous_letter)
+                    console.log(sender.next_letters)
                 }
+
+                sender.melp.make_request(
+                    `/api/corpus/${sender.melp.corpus_id}/Letter/?f_identifier=${letter_id}`,
+                    'GET',
+                    {},
+                    function(data) {
+                        if (data.records && data.records.length === 1) {
+                            let letter = data.records[0]
+
+                            // fix date
+                            let date_composed = letter.date_composed
+                            if (date_composed && date_composed.indexOf('Y')) date_composed = date_composed.split('T')[0]
+                            else date_composed = 'N/A'
+
+                            // set title
+                            jQuery('#letter-title').html(letter.title)
+
+                            // set prev and next letter links
+                            let prev_letter = jQuery('#previous-letter-link')
+                            let next_letter = jQuery('#next-letter-link')
+                            if (sender.previous_letter) prev_letter.attr('href', `/letters/${sender.previous_letter}`)
+                            else prev_letter.hide()
+                            if (sender.next_letters.length) next_letter.attr('href', `/letters/${sender.next_letters[0]}`)
+                            else next_letter.hide()
+
+                            // set metadata fields
+                            jQuery('#letter-metadata-author').html(letter.author ? letter.author.name : 'N/A')
+                            jQuery('#letter-metadata-transcriber').html('N/A')
+                            jQuery('#letter-metadata-repository').html(letter.repository ? letter.repository.name : 'N/A')
+                            jQuery('#letter-metadata-recipient').html(letter.recipient ? letter.recipient.name : 'N/A')
+                            jQuery('#letter-metadata-first-edition-date').html('N/A')
+                            jQuery('#letter-metadata-collection').html('N/A')
+                            jQuery('#letter-metadata-written-date').html(date_composed)
+                            jQuery('#letter-metadata-general-editors').html('N/A')
+
+                            // build thumbnails
+                            letter.images.forEach((image, image_index) => {
+                                sender.thumbnail_div.append(`
+                                    <img class="letter-thumbnail"
+                                    alt="Click to show page ${image_index + 1}"
+                                    src="https://iiif.dh.tamu.edu/iiif/2/MELP%2F${letter.identifier}%2F${image}/full/,110/0/default.jpg"
+                                    onerror="melp.letter_viewer.register_missing_image(${image_index});"
+                                    data-image_no="${image_index}"
+                                    data-iiif_identifier="https://iiif.dh.tamu.edu/iiif/2/MELP%2F${letter.identifier}%2F${image}">
+                                `)
+                            })
+
+                            // inject transcription and identify page breaks
+                            sender.transcript_div.prepend(letter.html)
+                            sender.pbs = jQuery('.page-break')
+
+                            // setup "up next" carousel
+                            if (sender.next_letters.length) {
+                                let carousel_container = jQuery('#letter-up-next-carousel')
+                                carousel_container.attr('data-search_t_identifier', `${sender.next_letters.join('__')}`)
+                                let carousel = new LetterCarousel(sender.melp, carousel_container)
+                            } else jQuery('#letter-up-next').hide()
+
+                            // rig up thumbnail click event
+                            jQuery('.letter-thumbnail').click(function () {
+                                sender.show_letter_image(jQuery(this).data('image_no'))
+                            })
+
+                            // determine when the letter image should change while scrolling through letter
+                            let page_rollover_threshold = {
+                                start: sender.transcript_div.offset().top,
+                                end: sender.transcript_div.offset().top + 100
+                            }
+
+                            // rig up transcript scroll event to catch page rollor
+                            sender.transcript_div.scroll(e => {
+                                let current_pb_y = sender.pbs.first().offset().top
+                                if (current_pb_y > sender.last_pb_y) sender.current_scroll_direction = "up"
+                                else sender.current_scroll_direction = "down"
+                                sender.last_pb_y = current_pb_y
+
+                                sender.pbs.each(function () {
+                                    let pb = jQuery(this)
+                                    let pb_y = pb.offset().top
+                                    if (pb_y >= page_rollover_threshold.start && pb_y <= page_rollover_threshold.end) {
+                                        let modifier = 1
+                                        if (sender.current_scroll_direction === "up") modifier = 2
+
+                                        sender.next_page = parseInt(pb.data('page')) - modifier
+                                        if (sender.next_page < 0) sender.next_page = 0
+                                    }
+                                })
+
+                                if (sender.next_page > -1 && sender.next_page !== sender.current_page) {
+                                    sender.show_letter_image(sender.next_page)
+                                }
+                            })
+
+                            // show the first page image
+                            sender.show_letter_image(0)
+                        }
+                    }
+                )
             }
         )
     }
@@ -1005,8 +1163,7 @@ class LetterViewer {
 
     show_letter_image(index, scrollTextIntoView=false) {
         const image = jQuery(`[data-image_no="${index}"]`)
-        this.viewer_div.empty()
-        this.letter_viewer = OpenSeadragon({
+        let viewer_options = {
             id:                 "letter-image-viewer",
             prefixUrl:          `${this.melp.plugin_url}/js/openseadragon/images/`,
             preserveViewport:   false,
@@ -1017,8 +1174,15 @@ class LetterViewer {
             homeFillsViewer:    true,
             showRotationControl: true,
             tileSources:   [image.data('iiif_identifier')],
-        })
+        }
 
+        this.viewer_div.empty()
+        if (this.melp.determine_medium() === 'mobile') {
+            viewer_options['toolbar'] = 'letter-image-toolbar'
+            jQuery('#letter-image-toolbar').empty()
+        }
+
+        this.letter_viewer = OpenSeadragon(viewer_options)
         let sender = this
 
         // fix toolbar styling
@@ -1038,7 +1202,8 @@ class LetterViewer {
                 tiledImage.addOnceHandler('fully-loaded-change', function() { sender.show_top_of_letter() })
         })
 
-        this.thumbnails.forEach(thumb => {
+        jQuery('.letter-thumbnail').each(function() {
+            let thumb = jQuery(this)
             thumb.removeClass("current")
         })
         image.addClass("current")
@@ -1116,6 +1281,10 @@ class LetterViewer {
         }
 
         return start_pb
+    }
+
+    register_missing_image(image_no) {
+        console.log(`missing ${image_no}`)
     }
 }
 

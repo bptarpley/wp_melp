@@ -4,6 +4,10 @@
         padding-right: 40px;
     }
 
+    #nav-container {
+        min-width: unset;
+    }
+
     #masthead-title-and-description #nav-title {
         font-size: 36px;
     }
@@ -23,6 +27,79 @@
     #nav-search-bar {
         width: 243px;
     }
+
+
+    /* ---------------------
+            HAMBURGER
+     ----------------------*/
+    #hamburger-open-button {
+        display: block;
+        width: 30px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    #hamburger-modal {
+        flex-direction: column;
+        position: fixed;
+        padding: 40px;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        z-index: 5000;
+        background-color: var(--page-bg-color);
+    }
+
+    #hamburger-title-container {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    #hamburger-title-container #nav-title {
+        font-size: 19px;
+    }
+
+    #hamburger-close-button {
+        height: 35px;
+        width: 35px;
+        cursor: pointer;
+    }
+
+    #hamburger-search-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 0px;
+        margin-bottom: 30px;
+    }
+
+    #hamburger-nav-container {
+        display: flex;
+        justify-content: center;
+        border-top: solid 1px var(--default-text-color);
+        border-bottom: solid 1px var(--default-text-color);
+        padding-top: 30px;
+        padding-bottom: 30px;
+    }
+
+    #hamburger-nav-container #nav-menu {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    #hamburger-nav-container #nav-menu a {
+        font-size: 25px;
+        font-weight: 700;
+        color: var(--default-text-color);
+    }
+
+    #hamburger-footer-container {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        justify-content: end;
+    }
+
 
     #browse-by-label {
         width: 100vw;
@@ -94,5 +171,141 @@
 
     #footer-copyright-text {
         width: 100%;
+    }
+
+
+    /* ---------------------
+         ADVANCED SEARCH
+     ----------------------*/
+    #adv-search-modal {
+        flex-direction: column;
+        position: fixed;
+        padding: 20px;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        z-index: 5000;
+        background-color: var(--page-bg-color);
+    }
+
+    #advanced-search-container {
+        width: 100%;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    #adv-search-modal-apply-close {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #adv-search-modal-apply-button {
+        height: 60px;
+        padding: 20px;
+        text-decoration: none;
+        color: var(--page-bg-color);
+        background-color: var(--default-text-color);
+        border: none;
+        border-radius: 90px;
+        font-family: var(--default-text-font);
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    #adv-search-modal-close-button {
+        height: 35px;
+        width: 35px;
+    }
+
+    #adv-search-button, #adv-search-box {
+        color: var(--control-bg-color);
+        background-color: var(--page-bg-color);
+        border: solid 2px var(--control-bg-color);
+        border-radius: 90px;
+        text-transform: none;
+        text-align: left;
+        width: 100%;
+        margin-bottom: 40px;
+    }
+
+    #adv-search-box {
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+
+    #adv-search-results-meta-bar, #adv-search-results-meta-bar select {
+        width: 100%;
+    }
+
+    #adv-search-filter-and-results {
+        display: flex;
+        flex-direction: column;
+    }
+
+
+    /* ---------------------
+         LETTER VIEWER
+     ----------------------*/
+    #letter-image-thumbs, #letter-citation {
+        overflow-x: scroll;
+    }
+
+    #letter-viewer {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .letter-sequence-link {
+        display: none;
+    }
+
+    #letter-image-toolbar {
+        display: flex;
+        flex-direction: row;
+        width: 80vw;
+    }
+
+    #letter-image-toolbar > div > div {
+        position: unset!important;
+    }
+
+    #letter-image-toolbar img {
+        filter: drop-shadow(0px 4px 0 lightgray);
+    }
+
+    #letter-xml-and-transcript {
+
+    }
+
+    #letter-image-and-license, #letter-xml-and-transcript {
+        width: 100%;
+        height: unset;
+        padding-top: 0px;
+    }
+
+    #letter-image-viewer, #letter-transcript-viewer {
+        height: 290px;
+        width: 100%;
+    }
+
+    #letter-metadata {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .metadata-label {
+        margin-left: 0px;
+    }
+
+    #letter-citation-and-credit {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
     }
 }
