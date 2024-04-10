@@ -1041,7 +1041,7 @@ class LetterViewer {
                 if (sorted_identifiers.records) {
                     let last_letter = null
                     let current_found = false
-                    console.log(letter_id)
+
                     sorted_identifiers.records.forEach(l => {
                         if (l.identifier === letter_id) {
                             sender.previous_letter = last_letter
@@ -1050,8 +1050,6 @@ class LetterViewer {
                         else if (current_found && sender.next_letters.length < 2) sender.next_letters.push(l.identifier)
                         else last_letter = l.identifier
                     })
-                    console.log(sender.previous_letter)
-                    console.log(sender.next_letters)
                 }
 
                 sender.melp.make_request(

@@ -1,7 +1,7 @@
 @media (max-width: 767px) {
     #top-container {
-        padding-left: 40px;
-        padding-right: 40px;
+        padding-left: 20px;
+        padding-right: 20px;
     }
 
     #nav-container {
@@ -20,12 +20,17 @@
 
     }
 
+    #nav-search {
+        width: 100%;
+    }
+
     #nav-search-button {
-        width: 107px;
+        width: 30%;
+        padding: unset;
     }
 
     #nav-search-bar {
-        width: 243px;
+        width: 70%;
     }
 
 
@@ -101,8 +106,21 @@
     }
 
 
+    /* ---------------------
+           BROWSE BY
+     ----------------------*/
+    #browse-by-container {
+        padding-left: 20px;
+        padding-right: 20px;
+        max-width: 100%;
+    }
+
+    #browse-by-bar {
+        gap: 10px;
+    }
+
     #browse-by-label {
-        width: 100vw;
+        width: 100%;
         text-align: center;
     }
 
@@ -145,6 +163,7 @@
 
     .project-update {
         width: 100%;
+        height: unset;
     }
 
     #subscribe {
@@ -236,6 +255,10 @@
     #adv-search-box {
         margin-top: 20px;
         margin-bottom: 10px;
+    }
+
+    #adv-search-clear-filter-button {
+        margin-left: 0px;
     }
 
     #adv-search-results-meta-bar, #adv-search-results-meta-bar select {
