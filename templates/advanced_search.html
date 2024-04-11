@@ -15,19 +15,21 @@
     <!-- DATE FILTER -->
     <details>
       <summary>Dates</summary>
-      <label>Date From</label>
+      <label class="metadata-label">Date From</label>
       <div class="adv-date-search-bar">
-        <input id="adv-search-date-from-year-box" class="four-num-box" placeholder="1700" max="2000" type="number" />
-        <input id="adv-search-date-from-month-box" class="two-num-box" placeholder="01" max="12" type="number" />
-        <input id="adv-search-date-from-day-box" class="two-num-box" placeholder="01" max="31" type="number" />
+        <input id="adv-search-date-from-year-box" class="date-box year" placeholder="1791" max="2000" type="number" />
+        <input id="adv-search-date-from-month-box" class="date-box month" placeholder="12" max="12" type="number" />
+        <input id="adv-search-date-from-day-box" class="date-box day" placeholder="7" max="31" type="number" />
       </div>
 
-      <label>Date To</label>
+      <label class="metadata-label">Date To</label>
       <div class="adv-date-search-bar">
-        <input id="adv-search-date-to-year-box" class="four-num-box" placeholder="1899" max="2000" type="number" />
-        <input id="adv-search-date-to-month-box" class="two-num-box" placeholder="12" max="12" type="number" />
-        <input id="adv-search-date-to-day-box" class="two-num-box" placeholder="31" max="31" type="number" />
+        <input id="adv-search-date-to-year-box" class="date-box year" placeholder="1848" max="2000" type="number" />
+        <input id="adv-search-date-to-month-box" class="date-box month" placeholder="7" max="12" type="number" />
+        <input id="adv-search-date-to-day-box" class="date-box day" placeholder="1" max="31" type="number" />
       </div>
+
+      <button type="button" id="adv-search-dates-apply-button">Apply Dates</button>
     </details>
 
     <!-- PEOPLE FILTER -->

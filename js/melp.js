@@ -458,8 +458,8 @@ class Nav {
         } else if (sender.melp.path.startsWith('/letters')) {
             jQuery('#nav-menu-current').addClass('current')
             if (sender.melp.path === '/letters/') {
+                sender.nav_container.addClass('search')
                 sender.nav_search.hide()
-                sender.nav_title.css('margin-right', 'auto')
             }
         } else if (sender.melp.path.startsWith('/locations')) {
             jQuery('#nav-menu-locations').addClass('current')
@@ -628,6 +628,18 @@ class AdvancedSearch {
         this.next_page_threshold = 0
         this.resetting_filters = false
         this.loaded_filters = []
+        this.date_range = {
+            min: {
+                year: 1791,
+                month: 12,
+                day: 7
+            },
+            max: {
+                year: 1848,
+                month: 7,
+                day: 1
+            }
+        }
         this.people = []
         this.works = []
         this.places = []
@@ -697,6 +709,64 @@ class AdvancedSearch {
             sender.criteria.s_date_composed = sorter.val()
             sender.load_results(true)
         })
+
+        // DATE FILTER
+        this.melp.make_request(
+            `/api/corpus/${this.melp.corpus_id}/Letter/`,
+            'GET',
+            {
+                a_min_mindate: 'date_composed',
+                a_max_maxdate: 'date_composed',
+                r_date_composed: '1-1-1768to1860-01-01',
+                'page-size': 0},
+            function(data) {
+                if (data.meta && data.meta.aggregations) {
+                    let min = new Date(data.meta.aggregations.mindate)
+                    let max = new Date(data.meta.aggregations.maxdate)
+                    let from_year_box = jQuery('#adv-search-date-from-year-box')
+                    let from_month_box = jQuery('#adv-search-date-from-month-box')
+                    let from_day_box = jQuery('#adv-search-date-from-day-box')
+                    let to_year_box = jQuery('#adv-search-date-to-year-box')
+                    let to_month_box = jQuery('#adv-search-date-to-month-box')
+                    let to_day_box = jQuery('#adv-search-date-to-day-box')
+
+                    sender.date_range.min.year = min.getUTCFullYear()
+                    sender.date_range.min.month = min.getUTCMonth() + 1
+                    sender.date_range.min.day = min.getUTCDate()
+                    sender.date_range.max.year = max.getUTCFullYear()
+                    sender.date_range.max.month = max.getUTCMonth() + 1
+                    sender.date_range.max.day = max.getUTCDate()
+
+                    console.log(sender.date_range)
+                    
+                    from_year_box.attr('placeholder', sender.date_range.min.year)
+                    from_month_box.attr('placeholder', sender.date_range.min.month)
+                    from_day_box.attr('placeholder', sender.date_range.min.day)
+                    to_year_box.attr('placeholder', sender.date_range.max.year)
+                    to_month_box.attr('placeholder', sender.date_range.max.month)
+                    to_day_box.attr('placeholder', sender.date_range.max.day)
+
+                    jQuery('#adv-search-dates-apply-button').click(function() {
+                        let from_year = from_year_box.val() ? from_year_box.val() : sender.date_range.min.year
+                        let from_month = from_month_box.val() ? from_month_box.val() : sender.date_range.min.month
+                        let from_day = from_day_box.val() ? from_day_box.val() : sender.date_range.min.day
+                        let to_year = to_year_box.val() ? to_year_box.val() : sender.date_range.max.year
+                        let to_month = to_month_box.val() ? to_month_box.val() : sender.date_range.max.month
+                        let to_day = to_day_box.val() ? to_day_box.val() : sender.date_range.max.day
+
+                        let from_date = `${from_year}-${from_month}-${from_day}`
+                        let to_date = `${to_year}-${to_month}-${to_day}`
+
+                        if (!isNaN(new Date(from_date)) && !isNaN(new Date(to_date))) {
+                            sender.criteria['r_date_composed'] = `${from_date}to${to_date}`
+                            sender.load_results(true)
+                        } else {
+                            console.log(`${from_date}to${to_date}`)
+                        }
+                    })
+                }
+            }
+        )
 
         // PEOPLE FILTER
         this.melp.make_request(
