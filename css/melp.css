@@ -150,6 +150,11 @@ details > summary::before {
     flex-shrink: 0;
 }
 
+#nav-container.homepage {
+    min-width: unset;
+    justify-content: end;
+}
+
 #nav-title {
     color: var(--heading-text-color);
     line-height: normal;
@@ -166,8 +171,7 @@ details > summary::before {
 }
 
 #nav-search-bar {
-    border-top-left-radius: 20px;
-    border-bottom-left-radius: 20px;
+    border-radius: 20px 0 0 20px;
     border: 2px solid var(--control-bg-color);
     color: var(--heading-text-color);
     width: 320px;
@@ -180,12 +184,10 @@ details > summary::before {
     height: 60px;
     width: 190px;
     padding: 20px;
-    line-height: 1;
     text-decoration: none;
     color: var(--control-text-color);
     background-color: var(--control-bg-color);
-    border-top-right-radius: 20px;
-    border-bottom-right-radius: 20px;
+    border-radius: 0 20px 20px 0;
     border: 2px solid var(--control-bg-color);
     font-family: Inter, sans-serif;
     font-size: 16px;
@@ -217,6 +219,9 @@ details > summary::before {
 
 #masthead > p {
     font-size: 15px;
+    margin-left: 40px;
+    margin-right: 40px;
+    text-align: center;
 }
 
 #masthead #nav-search {

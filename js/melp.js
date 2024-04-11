@@ -435,6 +435,9 @@ class Nav {
         })
 
         if (sender.melp.path === '/') {
+            // add homepage class
+            sender.nav_container.addClass('homepage')
+
             // cleanup
             sender.melp.clean_elementor_widget(sender.masthead_project_description)
             sender.melp.clean_elementor_widget(sender.masthead_byline)
@@ -449,8 +452,6 @@ class Nav {
 
                 sender.masthead_byline.contents().appendTo(sender.masthead)
                 sender.nav_search.appendTo(sender.masthead)
-
-                sender.nav_container.css('justify-content', 'end')
             }
         } else if (sender.melp.path.startsWith('/about')) {
             jQuery('#nav-menu-about').addClass('current')
