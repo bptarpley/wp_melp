@@ -379,11 +379,13 @@ class MELP {
             // fix advanced search
             if (this.path === '/letters/') {
                 let search_and_filter_div = jQuery('#adv-search-modal-search-and-filter-div')
-                if (search_and_filter_div.length) {
+                if (search_and_filter_div.length && !search_and_filter_div.children().length) {
                     jQuery('#adv-search-box').appendTo(search_and_filter_div)
                     jQuery('#adv-search-type-bar').appendTo(search_and_filter_div)
                     jQuery('#adv-search-filter').appendTo(search_and_filter_div)
                     jQuery('#adv-search-button').html(`<img src="${this.plugin_url}img/icon_filter.png"> Search & Filter`)
+                    search_and_filter_div.append('<div style="height: 100vh;">&nbsp;</div>')
+                    //this.advanced_search.rebuild_filter_boxes()
                 }
             }
         }
@@ -702,7 +704,7 @@ class AdvancedSearch {
             sender.search_modal.css('display', 'none')
         })
         modal_close_button.click(function() {
-            sender.search_modal.css('display', 'none')
+            sender.hide_search_modal()
         })
         sort_select_box.change(function() {
             let sorter = jQuery(this)
@@ -1057,7 +1059,7 @@ class AdvancedSearch {
         jQuery('.filter-box').each(function() {
             let box = jQuery(this)
             box.select2('destroy')
-            box.select2({'placeholder': `Select a ${box.data('type_label')}...`, width: '100%'})
+            box.select2({'placeholder': `Select a ${box.data('type_label')}...`, width: '100%', dropdownParent: sender.search_modal})
         })
     }
 
@@ -1082,6 +1084,12 @@ class AdvancedSearch {
 
     show_search_modal() {
         this.search_modal.css('display', 'flex')
+        jQuery('body').css('position', 'fixed')
+    }
+
+    hide_search_modal() {
+        this.search_modal.css('display', 'none')
+        jQuery('body').css('position', 'unset')
     }
 }
 
