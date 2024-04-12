@@ -780,7 +780,7 @@ class AdvancedSearch {
                     })
                     people_filter.select2({
                         placeholder: 'Select a person...',
-                        dropdownParent: filter_div,
+                        dropdownParent: jQuery('#adv-search-people-filter-container'),
                         width: '100%'
                     })
 
@@ -837,7 +837,7 @@ class AdvancedSearch {
                     })
                     work_filter.select2({
                         placeholder: 'Select a work...',
-                        dropdownParent: filter_div,
+                        dropdownParent: jQuery('#adv-search-works-filter-container'),
                         width: '100%'
                     })
 
@@ -887,7 +887,7 @@ class AdvancedSearch {
                     })
                     place_filter.select2({
                         placeholder: 'Select a place...',
-                        dropdownParent: filter_div,
+                        dropdownParent: jQuery('#adv-search-place-filter-container'),
                         width: '100%'
                     })
 
@@ -937,7 +937,7 @@ class AdvancedSearch {
                     })
                    repo_filter.select2({
                        placeholder: 'Select a repository...',
-                       dropdownParent: filter_div,
+                       dropdownParent: jQuery('#adv-search-repo-filter-container'),
                        width: '100%'
                    })
 
