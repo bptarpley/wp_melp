@@ -358,6 +358,25 @@ class MELP {
                 let src = thumb.attr('src')
                 thumb.attr('src', src.replace('square/330,', 'full/,200'))
             })
+
+            // fix advanced search
+            if (this.path === '/letters/') {
+                let search_bar = jQuery('#adv-search-bar')
+                let search_type_bar = jQuery('#adv-search-type-bar').detach()
+                let search_filters = jQuery('#adv-search-filter').detach()
+
+                jQuery('#adv-search-box').prependTo(search_bar)
+                search_bar.after(search_type_bar)
+                search_filters.prependTo(jQuery('#adv-search-filter-and-results'))
+                jQuery('#adv-search-button').html('Search')
+                jQuery('#adv-search-modal-search-and-filter-div').empty()
+                this.advanced_search.build_filter_boxes()
+            }
+
+            // fix letter viewer
+            if (this.letter_viewer) {
+
+            }
         }
         else if (this.medium === 'mobile') {
             // fix nav
@@ -385,8 +404,13 @@ class MELP {
                     jQuery('#adv-search-filter').appendTo(search_and_filter_div)
                     jQuery('#adv-search-button').html(`<img src="${this.plugin_url}img/icon_filter.png"> Search & Filter`)
                     search_and_filter_div.append('<div style="height: 100vh;">&nbsp;</div>')
-                    //this.advanced_search.rebuild_filter_boxes()
+                    if (jQuery('.select2').length) this.advanced_search.destroy_filter_boxes()
                 }
+            }
+
+            // fix letter viewer
+            if (this.letter_viewer) {
+
             }
         }
 
@@ -625,11 +649,14 @@ class AdvancedSearch {
             'page': 1,
             'page-size': 100,
             's_date_composed': 'asc',
-            'es_debug': 'y'
+            'a_terms_entities': 'entities_mentioned.xml_id,entities_mentioned.entity_type',
+            'a_terms_authors': 'author.xml_id',
+            'a_terms_recipients': 'recipient.xml_id',
+            'a_terms_repos': 'repository.id',
+            //'es_debug': 'y'
         }
         this.next_page_threshold = 0
         this.resetting_filters = false
-        this.loaded_filters = []
         this.date_range = {
             min: {
                 year: 1791,
@@ -642,10 +669,37 @@ class AdvancedSearch {
                 day: 1
             }
         }
-        this.people = []
-        this.works = []
-        this.places = []
-        this.repos = []
+        this.filters = {
+            PERSON: {
+                control_name: 'people',
+                identifier: 'xml_id',
+                parameters: ['t_author.xml_id|', 't_recipient.xml_id|', 't_entities_mentioned.xml_id|'],
+                placeholder: 'Select a person...',
+                active: []
+            },
+            WORK: {
+                control_name: 'works',
+                identifier: 'xml_id',
+                parameters: ['f_entities_mentioned.xml_id|'],
+                placeholder: 'Select a work...',
+                active: []
+            },
+            PLACE: {
+                control_name: 'places',
+                identifier: 'xml_id',
+                parameters: ['f_entities_mentioned.xml_id|'],
+                placeholder: 'Select a place...',
+                active: []
+            },
+            ORG: {
+                control_name: 'repos',
+                identifier: 'id',
+                parameters: ['f_repository.id|'],
+                placeholder: 'Select a repository...',
+                active: []
+            }
+        }
+
         this.search_box = jQuery('#adv-search-box')
         this.search_modal = jQuery('#adv-search-modal')
 
@@ -653,12 +707,6 @@ class AdvancedSearch {
         let apply_filters_button = jQuery('#adv-search-modal-apply-button')
         let modal_close_button = jQuery('#adv-search-modal-close-button')
         let sort_select_box = jQuery('#adv-search-sort-box')
-
-        let filter_div = jQuery('#adv-search-filter')
-        let people_filter = jQuery('#adv-search-people-filter')
-        let work_filter = jQuery('#adv-search-work-filter')
-        let place_filter = jQuery('#adv-search-place-filter')
-        let repo_filter = jQuery('#adv-search-repo-filter')
 
         let sender = this
 
@@ -770,208 +818,28 @@ class AdvancedSearch {
             }
         )
 
-        // PEOPLE FILTER
+        // ENTITY FILTERS
         this.melp.make_request(
             `/api/corpus/${this.melp.corpus_id}/Entity/`,
             'GET',
-            {'f_entity_type': 'PERSON', 's_name': 'asc', 'page-size': 1000},
+            {'s_name': 'asc', 'page-size': 1000},
             function(data) {
                 if (data.records) {
-                    data.records.forEach(person => {
-                        people_filter.append(`<option value="${person.xml_id}">${person.name}</option>`)
+                    data.records.forEach(e => {
+                        let entity_type = e.entity_type
+                        let filter = sender.filters[entity_type]
+                        let select_box = jQuery(`#adv-search-${filter.control_name}-filter`)
+                        if (!select_box.length) console.log(entity_type)
+                        select_box.append(`<option value="${e[filter.identifier]}">${e.name}</option>`)
                     })
-                    people_filter.select2({
-                        placeholder: 'Select a person...',
-                        dropdownParent: jQuery('#adv-search-people-filter-container'),
-                        width: '100%'
-                    })
 
-                    people_filter.change(function() {
-                        let people_requested = people_filter.val()
-                        let people_added = []
-                        let people_removed = []
+                    if (sender.melp.medium === 'desktop') sender.build_filter_boxes()
 
-                        sender.people.forEach(current_person => {
-                            if (!people_requested.includes(current_person)) {
-                                people_removed.push(current_person)
-                            }
-                        })
-
-                        people_requested.forEach(new_person => {
-                            if (!sender.people.includes(new_person)) {
-                                people_added.push(new_person)
-                            }
-                        })
-
-                        sender.people = people_requested
-                        people_added.forEach(person => {
-                            sender.add_criteria('t_author.xml_id|', person)
-                            sender.add_criteria('t_recipient.xml_id|', person)
-                            sender.add_criteria('t_entities_mentioned.xml_id|', person)
-                        })
-                        people_removed.forEach(person => {
-                            sender.remove_criteria('t_author.xml_id|', person)
-                            sender.remove_criteria('t_recipient.xml_id|', person)
-                            sender.remove_criteria('t_entities_mentioned.xml_id|', person)
-                        })
-
-                        if (sender.people.length === 1) sender.criteria['operator'] = 'or'
-                        else delete sender.criteria['operator']
-
-                        if (!sender.resetting_filters) sender.load_results(true)
+                    jQuery('.filter-box').change(function() {
+                        let select_box = jQuery(this)
+                        sender.perform_entity_filter(select_box.data('entity_type'))
                     })
                 }
-                sender.loaded_filters.push('people')
-            },
-            true,
-            true
-        )
-
-        // WORK FILTER
-        this.melp.make_request(
-            `/api/corpus/${this.melp.corpus_id}/Entity/`,
-            'GET',
-            {'f_entity_type': 'WORK', 's_name': 'asc', 'page-size': 1000},
-            function(data) {
-                if (data.records) {
-                    data.records.forEach(work => {
-                        work_filter.append(`<option value="${work.xml_id}">${work.name}</option>`)
-                    })
-                    work_filter.select2({
-                        placeholder: 'Select a work...',
-                        dropdownParent: jQuery('#adv-search-works-filter-container'),
-                        width: '100%'
-                    })
-
-                    work_filter.change(function() {
-                        let works_requested = work_filter.val()
-                        let works_added = []
-                        let works_removed = []
-
-                        sender.works.forEach(current_work => {
-                            if (!works_requested.includes(current_work)) {
-                                works_removed.push(current_work)
-                            }
-                        })
-
-                        works_requested.forEach(new_work => {
-                            if (!sender.works.includes(new_work)) {
-                                works_added.push(new_work)
-                            }
-                        })
-
-                        sender.works = works_requested
-                        works_added.forEach(work => {
-                            sender.add_criteria('f_entities_mentioned.xml_id|', work)
-                        })
-                        works_removed.forEach(work => {
-                            sender.remove_criteria('f_entities_mentioned.xml_id|', work)
-                        })
-
-                        if (!sender.resetting_filters) sender.load_results(true)
-                    })
-                }
-                sender.loaded_filters.push('works')
-            },
-            true,
-            true
-        )
-
-        // PLACE FILTER
-        this.melp.make_request(
-            `/api/corpus/${this.melp.corpus_id}/Entity/`,
-            'GET',
-            {'f_entity_type': 'PLACE', 's_name': 'asc', 'page-size': 1000},
-            function(data) {
-                if (data.records) {
-                    data.records.forEach(place => {
-                        place_filter.append(`<option value="${place.xml_id}">${place.name}</option>`)
-                    })
-                    place_filter.select2({
-                        placeholder: 'Select a place...',
-                        dropdownParent: jQuery('#adv-search-place-filter-container'),
-                        width: '100%'
-                    })
-
-                    place_filter.change(function() {
-                        let places_requested = place_filter.val()
-                        let places_added = []
-                        let places_removed = []
-
-                        sender.places.forEach(current_place => {
-                            if (!places_requested.includes(current_place)) {
-                                places_removed.push(current_place)
-                            }
-                        })
-
-                        places_requested.forEach(new_place => {
-                            if (!sender.places.includes(new_place)) {
-                                places_added.push(new_place)
-                            }
-                        })
-
-                        sender.places = places_requested
-                        places_added.forEach(place => {
-                            sender.add_criteria('f_entities_mentioned.xml_id|', place)
-                        })
-                        places_removed.forEach(place => {
-                            sender.remove_criteria('f_entities_mentioned.xml_id|', place)
-                        })
-
-                        if (!sender.resetting_filters) sender.load_results(true)
-                    })
-                }
-                sender.loaded_filters.push('places')
-            },
-            true,
-            true
-        )
-
-        // REPO FILTER
-        this.melp.make_request(
-            `/api/corpus/${this.melp.corpus_id}/Entity/`,
-            'GET',
-            {'f_entity_type': 'ORG', 's_name': 'asc', 'page-size': 1000},
-            function(data) {
-                if (data.records) {
-                    data.records.forEach(repo => {
-                        repo_filter.append(`<option value="${repo.id}">${repo.name}</option>`)
-                    })
-                   repo_filter.select2({
-                       placeholder: 'Select a repository...',
-                       dropdownParent: jQuery('#adv-search-repo-filter-container'),
-                       width: '100%'
-                   })
-
-                    repo_filter.change(function() {
-                        let repos_requested = repo_filter.val()
-                        let repos_added = []
-                        let repos_removed = []
-
-                        sender.repos.forEach(current_repo => {
-                            if (!repos_requested.includes(current_repo)) {
-                                repos_removed.push(current_repo)
-                            }
-                        })
-
-                        repos_requested.forEach(new_repo => {
-                            if (!sender.repos.includes(new_repo)) {
-                                repos_added.push(new_repo)
-                            }
-                        })
-
-                        sender.repos = repos_requested
-                        repos_added.forEach(repo => {
-                            sender.add_criteria('f_repository.id|', repo)
-                        })
-                        repos_removed.forEach(repo => {
-                            sender.remove_criteria('f_repository.id|', repo)
-                        })
-
-                        if (!sender.resetting_filters) sender.load_results(true)
-                    })
-                }
-                sender.loaded_filters.push('repos')
             },
             true,
             true
@@ -981,10 +849,10 @@ class AdvancedSearch {
         jQuery('#adv-search-clear-filter-button').click(function() {
             sender.resetting_filters = true
 
-            people_filter.val(null).trigger('change')
-            work_filter.val(null).trigger('change')
-            place_filter.val(null).trigger('change')
-            repo_filter.val(null).trigger('change')
+            jQuery('.filter-box').each(function() {
+                let filter_box = jQuery(this)
+                filter_box.val(null).trigger('change')
+            })
 
             sender.load_results(true)
             sender.resetting_filters = false
@@ -1049,18 +917,97 @@ class AdvancedSearch {
                             l.data('observed', true)
                         }
                     })
+
+                    if (data.meta.aggregations) {
+                        let relevant = { PERSON: [], WORK: [], PLACE: [], ORG: [] }
+
+                        if (data.meta.aggregations.authors) {
+                            Object.keys(data.meta.aggregations.authors).forEach(author_id => relevant.PERSON.push(author_id))
+                        }
+                        if (data.meta.aggregations.recipients) {
+                            Object.keys(data.meta.aggregations.recipients).forEach(recip_id => relevant.PERSON.push(recip_id))
+                        }
+                        if (data.meta.aggregations.entities) {
+                            Object.keys(data.meta.aggregations.entities).forEach(entity => {
+                                let [xml_id, entity_type] = entity.split('|||')
+                                relevant[entity_type].push(xml_id)
+                            })
+                        }
+                        if (data.meta.aggregations.repos) {
+                            Object.keys(data.meta.aggregations.repos).forEach(repo_id => relevant.ORG.push(repo_id))
+                        }
+
+                        relevant.PERSON = Array.from(new Set(relevant.PERSON))
+
+                        Object.keys(relevant).forEach(entity_type => {
+                            let filter = sender.filters[entity_type]
+                            jQuery(`#adv-search-${filter.control_name}-filter option`).each(function() {
+                                let option = jQuery(this)
+                                if (!relevant[entity_type].includes(option.attr('value'))) {
+                                    option.prop('disabled', true)
+                                } else option.prop('disabled', false)
+                            })
+                        })
+                    }
                 }
             }
         )
     }
 
-    async rebuild_filter_boxes() {
-        while (this.loaded_filters.length < 4) await new Promise(resolve => setTimeout(resolve, 2000))
+    build_filter_boxes() {
+        let sender = this
         jQuery('.filter-box').each(function() {
-            let box = jQuery(this)
-            box.select2('destroy')
-            box.select2({'placeholder': `Select a ${box.data('type_label')}...`, width: '100%', dropdownParent: sender.search_modal})
+            let filter_box = jQuery(this)
+            let entity_type = filter_box.data('entity_type')
+            let filter = sender.filters[entity_type]
+            filter_box.select2({
+                placeholder: filter.placeholder,
+                dropdownParent: jQuery(`#adv-search-${filter.control_name}-filter-container`),
+                width: '100%'
+            })
         })
+    }
+
+    destroy_filter_boxes() {
+        jQuery('.filter-box').each(function() {
+            let filter_box = jQuery(this)
+            filter_box.select2('destroy')
+        })
+    }
+
+    perform_entity_filter(entity_type) {
+        let select_box = jQuery(`#adv-search-${this.filters[entity_type].control_name}-filter`)
+        let entities_requested = select_box.val()
+        let entities_added = []
+        let entities_removed = []
+
+        this.filters[entity_type].active.forEach(current_entity => {
+            if (!entities_requested.includes(current_entity)) {
+                entities_removed.push(current_entity)
+            }
+        })
+        entities_requested.forEach(new_entity => {
+            if (!this.filters[entity_type].active.includes(new_entity)) {
+                entities_added.push(new_entity)
+            }
+        })
+
+        this.filters[entity_type].active = entities_requested
+        entities_added.forEach(entity => {
+            this.filters[entity_type].parameters.forEach(param => {
+                this.add_criteria(param, entity)
+            })
+        })
+        entities_removed.forEach(entity => {
+            this.filters[entity_type].parameters.forEach(param => {
+                this.remove_criteria(param, entity)
+            })
+        })
+
+        if (this.filters['PERSON'].active.length === 1) this.criteria['operator'] = 'or'
+        else delete this.criteria['operator']
+
+        if (!this.resetting_filters) this.load_results(true)
     }
 
     add_criteria(key, value) {
@@ -1097,6 +1044,7 @@ class AdvancedSearch {
 class LetterViewer {
     constructor(melp_instance, letter_id) {
         this.melp = melp_instance
+        this.letter_id = letter_id
         this.letter_viewer = null
         this.previous_letter = null
         this.next_letters = []
@@ -1156,6 +1104,7 @@ class LetterViewer {
                             else next_letter.hide()
 
                             // set metadata fields
+                            jQuery('#letter-xml-link').attr('href', `${sender.melp.github_prefix}${sender.letter_id}`)
                             jQuery('#letter-metadata-author').html(letter.author ? letter.author.name : 'N/A')
                             jQuery('#letter-metadata-transcriber').html('N/A')
                             jQuery('#letter-metadata-repository').html(letter.repository ? letter.repository.name : 'N/A')

@@ -92,6 +92,20 @@ input[type=radio] + label {
     line-height: 21px;
 }
 
+input[type=text] {
+    color: var(--default-text-color);
+    font-family: var(--default-text-font);
+    font-style: italic;
+    font-size: 20px;
+    font-weight: 400;
+}
+
+option[disabled] { display: none; }
+
+button {
+    cursor: pointer;
+}
+
 details {
     padding-bottom: 20px;
     border-bottom: solid 1px var(--default-text-color);
@@ -660,12 +674,17 @@ details > summary::before {
     margin-top: 16px!important;
     margin-left: 10px!important;
     font-family: var(--default-text-font);
+    cursor: pointer;
 }
 
 .select2-results__options {
     border: solid 2px var(--heading-text-color)!important;
     border-top: none;
 
+}
+
+.select2-container--default .select2-results__option[aria-disabled=true] {
+    display: none;
 }
 
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
@@ -739,6 +758,7 @@ details > summary::before {
  ----------------------*/
 #advanced-search-container.letter-viewer-container {
     width: 100vw;
+    max-width: unset;
     margin-left: auto;
     margin-right: auto;
 }
@@ -907,4 +927,43 @@ details > summary::before {
 
 #letter-credit h2 {
     margin-top: 0px;
+}
+
+
+div.dateline {
+    margin-bottom: 10px;
+}
+
+div.closer {
+    margin-bottom: 10px;
+}
+
+span.underline, span.rend-underline {
+    text-decoration: underline;
+}
+
+span.rend-superscript {
+    vertical-align: super;
+    font-size: smaller;
+    line-height: normal;
+}
+
+span.regularized {
+    font-weight: bold;
+}
+
+span.deletion {
+    text-decoration: line-through;
+}
+
+span.entity {
+    color: orange;
+}
+
+span.addition {
+    color: green;
+}
+
+span.unclear {
+    color: gray;
 }
