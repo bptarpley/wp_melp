@@ -112,7 +112,7 @@
     /* ---------------------
            BROWSE BY
      ----------------------*/
-    #browse-by-container {
+    #browse-by-container, #browse-by-tray {
         padding-left: 20px;
         padding-right: 20px;
         max-width: 100%;

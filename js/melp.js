@@ -33,7 +33,13 @@ class MELP {
 
         // BROWSE BY MENU
         let browse_by_container = jQuery('#browse-by-container')
-        if (browse_by_container.length) this.load_template(browse_by_container, 'browse_by.html', null, true)
+        if (browse_by_container.length) this.load_template(
+            browse_by_container,
+            'browse_by.html',
+            function() {
+                let browser = new Browser(melp)
+            },
+            true)
 
         // START HERE
         let start_here_container = jQuery('#start-here-container')
@@ -85,6 +91,12 @@ class MELP {
                     true
                 )
             }
+        }
+
+        // BROWSER
+        let browse_container = jQuery('#browse-container')
+        if (browse_container.length) {
+
         }
 
         // FOOTER
@@ -514,6 +526,139 @@ class Nav {
 }
 
 
+class Browser {
+    constructor(melp_instance) {
+        this.melp = melp_instance
+        this.tray = jQuery('#browse-by-tray')
+        this.sort_box = jQuery('#browse-by-sort-box')
+        this.index_box = jQuery('#browse-by-index')
+        this.stats = {
+            PERSON: {},
+            PLACE: {},
+            WORK: {},
+            ORG: {}
+        }
+        this.loaded = false
+
+        let sender = this
+
+        jQuery('.browse-by-pill').click(function() {
+            let pill = jQuery(this)
+            let entity_type = pill.data('entity_type')
+
+            if (Object.keys(sender.stats).includes(entity_type)) {
+                if (sender.loaded) sender.populate_index(entity_type)
+                else sender.load_stats(entity_type)
+            }
+        })
+
+        this.sort_box.change(function() {
+            sender.sort_index()
+        })
+    }
+
+    load_stats(index_to_populate=null) {
+        let sender = this
+        sender.melp.make_request(
+            `/api/corpus/${sender.melp.corpus_id}/Letter/`,
+            'GET',
+            {
+                'page-size': 0,
+                'a_terms_index': 'entities_mentioned.xml_id,entities_mentioned.entity_type',
+                'a_terms_author': 'author.xml_id',
+                'a_terms_recipient': 'recipient.xml_id',
+                'a_terms_repo': 'repository.id'
+            },
+            function(stat_aggs) {
+                if (stat_aggs.meta && stat_aggs.meta.aggregations) {
+                    let index_agg = stat_aggs.meta.aggregations.index
+                    let author_agg = stat_aggs.meta.aggregations.author
+                    let recip_agg = stat_aggs.meta.aggregations.recipient
+                    let repo_agg = stat_aggs.meta.aggregations.repo
+
+                    Object.keys(index_agg).forEach(index_key => {
+                        let [xml_id, entity_type] = index_key.split('|||')
+                        sender.stats[entity_type][xml_id] = {count: index_agg[index_key]}
+                    })
+                    Object.keys(author_agg).forEach(auth_key => {
+                        if (!(auth_key in sender.stats.PERSON)) sender.stats.PERSON[auth_key] = { count: 0 }
+                        sender.stats.PERSON[auth_key]['count'] += author_agg[auth_key]
+                    })
+                    Object.keys(recip_agg).forEach(recip_key => {
+                        if (!(recip_key in sender.stats.PERSON)) sender.stats.PERSON[recip_key] = { count: 0 }
+                        sender.stats.PERSON[recip_key]['count'] += recip_agg[recip_key]
+                    })
+                    Object.keys(repo_agg).forEach(repo_key => {
+                        sender.stats.ORG[repo_key] = { count: repo_agg[repo_key] }
+                    })
+
+                    sender.melp.make_request(
+                        `/api/corpus/${sender.melp.corpus_id}/Entity/`,
+                        'GET',
+                        {'page-size': 1000, 's_name': 'asc'},
+                        function(ents) {
+                            if (ents.records) {
+                                ents.records.forEach(ent => {
+                                    if ((ent.entity_type in sender.stats) && (ent.xml_id in sender.stats[ent.entity_type])) {
+                                        sender.stats[ent.entity_type][ent.xml_id]['name'] = ent.name
+                                    } else if ((ent.entity_type in sender.stats) && (ent.id in sender.stats[ent.entity_type])) {
+                                        sender.stats[ent.entity_type][ent.id]['name'] = ent.name
+                                    }
+                                })
+
+                                sender.loaded = true
+
+                                if (index_to_populate) {
+                                    sender.populate_index(index_to_populate)
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        )
+    }
+
+    populate_index(entity_type) {
+        this.index_box.empty()
+        this.tray.removeClass('open')
+        setTimeout(() => {
+            if (this.loaded && (entity_type in this.stats)) {
+                Object.keys(this.stats[entity_type]).forEach(xml_id => {
+                    let entity = this.stats[entity_type][xml_id]
+                    this.index_box.append(`
+                        <div class="browse-by-entity" data-name="${entity.name}" data-freq="${entity.count}">
+                          <a href="/letters/?${entity_type}=${xml_id}" target="_blank">(${entity.count}) ${entity.name}</a>
+                        </div>
+                    `)
+                })
+                this.sort_index()
+                this.tray.addClass('open')
+            }
+        }, 1000)
+    }
+
+    sort_index() {
+        let sort_by = this.sort_box.val()
+        this.index_box.find('.browse-by-entity').sort(function (a, b) {
+            let entity_a_attr = sort_by === 'alpha' ? jQuery(a).data('name') : jQuery(a).data('freq')
+            let entity_b_attr = sort_by === 'alpha' ? jQuery(b).data('name') : jQuery(b).data('freq')
+
+            if (entity_a_attr < entity_b_attr) {
+                if (sort_by === 'alpha') return -1
+                else return 1
+            }
+            if (entity_a_attr > entity_b_attr) {
+                if (sort_by === 'alpha') return 1
+                else return -1
+            }
+            return 0
+        })
+        .appendTo(this.index_box)
+    }
+}
+
+
 class LetterCarousel {
     constructor(melp_instance, element) {
         this.melp = melp_instance
@@ -699,6 +844,7 @@ class AdvancedSearch {
                 active: []
             }
         }
+        this.initial_filter = null
 
         this.search_box = jQuery('#adv-search-box')
         this.search_modal = jQuery('#adv-search-modal')
@@ -758,6 +904,14 @@ class AdvancedSearch {
             let sorter = jQuery(this)
             sender.criteria.s_date_composed = sorter.val()
             sender.load_results(true)
+        })
+
+        // INITIAL FILTERS
+        Object.keys(this.filters).forEach(entity_type => {
+            if (this.melp.params.get.get(entity_type)) {
+                this.filters[entity_type]['initial'] = this.melp.params.get.get(entity_type)
+                this.initial_filter = entity_type
+            }
         })
 
         // DATE FILTER
@@ -839,6 +993,11 @@ class AdvancedSearch {
                         let select_box = jQuery(this)
                         sender.perform_entity_filter(select_box.data('entity_type'))
                     })
+
+                    if (sender.initial_filter) {
+                        jQuery(`.filter-box[data-entity_type=${sender.initial_filter}]`).val(sender.filters[sender.initial_filter]['initial']).trigger('change')
+                        jQuery(`#adv-search-${sender.filters[sender.initial_filter].control_name}-filter-container`).prop('open', true)
+                    }
                 }
             },
             true,
@@ -858,7 +1017,7 @@ class AdvancedSearch {
             sender.resetting_filters = false
         })
 
-        this.load_results(true)
+        if (!this.initial_filter) this.load_results(true)
     }
 
     load_results(reset=false) {
@@ -1129,6 +1288,12 @@ class LetterViewer {
                             // inject transcription and identify page breaks
                             sender.transcript_div.prepend(letter.html)
                             sender.pbs = jQuery('.page-break')
+
+                            // rig up entity click event
+                            jQuery('span.entity').click(function() {
+                                let entity = jQuery(this)
+                                window.open(`/letters/?${entity.data('entity_type')}=${entity.data('entity_id')}`, '_blank')
+                            })
 
                             // setup "up next" carousel
                             if (sender.next_letters.length) {
