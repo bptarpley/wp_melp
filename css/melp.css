@@ -111,21 +111,22 @@ details {
     border-bottom: solid 1px var(--default-text-color);
 }
 
-details > summary, .metadata-label {
+details > summary, .metadata-label, .tippy-content .entity-popup-label {
     display: block;
     color: var(--default-text-color);
     font-family: var(--default-text-font);
-    cursor: pointer;
     font-size: 16px;
     font-style: normal;
     font-weight: 700;
     line-height: normal;
     text-transform: uppercase;
-    list-style: none;
-    margin-left: 20px;
 }
 
-.metadata-label { margin-left: 0px; }
+details > summary {
+    margin-left: 20px;
+    list-style: none;
+    cursor: pointer;
+}
 
 details > summary::marker, /* Latest Chrome, Edge, Firefox */
 details > summary::-webkit-details-marker /* Safari */ {
@@ -832,6 +833,7 @@ details > summary::before {
 .letter-thumbnail {
     border-radius: 10px!important;
     filter: grayscale(100%);
+    cursor: pointer;
 }
 
 .letter-thumbnail.current {
@@ -937,7 +939,7 @@ details > summary::before {
     margin-top: 40px;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr max-content;
+    grid-template-rows: auto auto max-content;
     grid-row-gap: 15px;
 }
 
@@ -999,10 +1001,6 @@ span.rend-superscript {
     vertical-align: super;
     font-size: smaller;
     line-height: normal;
-}
-
-span.regularized {
-    font-weight: bold;
 }
 
 span.deletion {
@@ -1079,3 +1077,22 @@ span.addition {
 span.unclear {
     color: gray;
 }
+
+.tippy-box {
+    background-color: var(--alt-bg-color);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.tippy-content .entity-popup-label {
+    margin-left: 0;
+    margin-bottom: 10px;
+}
+
+.entity-popup-uris a { color: var(--heading-text-color); }
+.tippy-box button { margin-top: 10px; }
+
+.letter-facet > div {
+    padding-left: 20px;
+}
+.letter-facet > div a { color: var(--default-text-color); }

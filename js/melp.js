@@ -1212,10 +1212,10 @@ class LetterViewer {
         this.transcript_div = jQuery('#letter-transcript-viewer')
         this.pages_highlighted = []
         this.pbs = null
-        this.current_scroll_direction = 'down'
-        this.last_pb_y = 0
+        this.last_pb_scrolled = null
+        this.scroll_timer = null
         this.current_page = 0
-        this.next_page = -1
+        this.entities = {}
 
         let sender = this
 
@@ -1246,10 +1246,15 @@ class LetterViewer {
                         if (data.records && data.records.length === 1) {
                             let letter = data.records[0]
 
-                            // fix date
+                            // fix dates
                             let date_composed = letter.date_composed
-                            if (date_composed && date_composed.indexOf('Y')) date_composed = date_composed.split('T')[0]
+                            let date_transcribed = letter.date_transcribed
+
+                            if (date_composed && date_composed.indexOf('T')) date_composed = date_composed.split('T')[0]
                             else date_composed = 'N/A'
+
+                            if (date_transcribed && date_transcribed.indexOf('T')) date_transcribed = date_transcribed.split('T')[0]
+                            else date_transcribed = 'N/A'
 
                             // set title
                             jQuery('#letter-title').html(letter.title)
@@ -1265,13 +1270,13 @@ class LetterViewer {
                             // set metadata fields
                             jQuery('#letter-xml-link').attr('href', `${sender.melp.github_prefix}${sender.letter_id}`)
                             jQuery('#letter-metadata-author').html(letter.author ? letter.author.name : 'N/A')
-                            jQuery('#letter-metadata-transcriber').html('N/A')
+                            jQuery('#letter-metadata-transcriber').html(letter.transcriber ? letter.transcriber : 'N/A')
                             jQuery('#letter-metadata-repository').html(letter.repository ? letter.repository.name : 'N/A')
                             jQuery('#letter-metadata-recipient').html(letter.recipient ? letter.recipient.name : 'N/A')
-                            jQuery('#letter-metadata-first-edition-date').html('N/A')
-                            jQuery('#letter-metadata-collection').html('N/A')
+                            jQuery('#letter-metadata-first-edition-date').html(date_transcribed)
+                            jQuery('#letter-metadata-collection').html(letter.collection ? letter.collection : 'N/A')
                             jQuery('#letter-metadata-written-date').html(date_composed)
-                            jQuery('#letter-metadata-general-editors').html('N/A')
+                            jQuery('#letter-metadata-general-editors').html(letter.general_editors ? letter.general_editors : 'N/A')
 
                             // build thumbnails
                             letter.images.forEach((image, image_index) => {
@@ -1289,10 +1294,51 @@ class LetterViewer {
                             sender.transcript_div.prepend(letter.html)
                             sender.pbs = jQuery('.page-break')
 
-                            // rig up entity click event
-                            jQuery('span.entity').click(function() {
+                            // register entities
+                            if (letter.entities_mentioned && letter.entities_mentioned.length) {
+                                letter.entities_mentioned.forEach(ent => {
+                                    let ent_key = `${ent.entity_type}-${ent.xml_id}`
+                                    let ent_box = jQuery(`#letter-${ent.entity_type}-facet`)
+                                    let ent_url = `/letters/?${ent.entity_type}=${ent.xml_id}`
+
+                                    if (!(ent_key in sender.entities)) {
+                                        sender.entities[ent_key] = ent
+                                    }
+
+                                    ent_box.append(`
+                                        <div><a href="${ent_url}">${ent.name}</a></div>
+                                    `)
+                                })
+                            }
+
+                            // rig up entity tooltips
+                            jQuery('span.entity').each(function() {
                                 let entity = jQuery(this)
-                                window.open(`/letters/?${entity.data('entity_type')}=${entity.data('entity_id')}`, '_blank')
+                                tippy(entity[0], {
+                                    arrow: true,
+                                    animation: 'fade',
+                                    trigger: 'click',
+                                    interactive: true,
+                                    allowHTML: true,
+                                    content: 'Loading...',
+                                    onShow(instance) {
+                                        let ent_key = `${entity.data('entity_type')}-${entity.data('entity_id')}`
+                                        if (ent_key in sender.entities) sender.populate_entity_details(entity, instance)
+                                        else {
+                                            sender.melp.make_request(
+                                                `/api/corpus/${sender.melp.corpus_id}/Entity/`,
+                                                'GET',
+                                                {f_xml_id: entity.data('entity_id'), f_entity_type: entity.data('entity_type')},
+                                                function(data) {
+                                                    if (data.records && data.records.length) {
+                                                        sender.entities[ent_key] = data.records[0]
+                                                        sender.populate_entity_details(entity, instance)
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                })
                             })
 
                             // setup "up next" carousel
@@ -1304,36 +1350,26 @@ class LetterViewer {
 
                             // rig up thumbnail click event
                             jQuery('.letter-thumbnail').click(function () {
-                                sender.show_letter_image(jQuery(this).data('image_no'))
+                                sender.show_letter_image(jQuery(this).data('image_no'), true)
                             })
 
-                            // determine when the letter image should change while scrolling through letter
-                            let page_rollover_threshold = {
-                                start: sender.transcript_div.offset().top,
-                                end: sender.transcript_div.offset().top + 100
-                            }
-
-                            // rig up transcript scroll event to catch page rollor
+                            // rig up transcript scroll event to catch page rollover
                             sender.transcript_div.scroll(e => {
-                                let current_pb_y = sender.pbs.first().offset().top
-                                if (current_pb_y > sender.last_pb_y) sender.current_scroll_direction = "up"
-                                else sender.current_scroll_direction = "down"
-                                sender.last_pb_y = current_pb_y
+                                let y_top = sender.transcript_div.offset().top
+                                let y_bot = y_top + 200
 
-                                sender.pbs.each(function () {
+                                sender.pbs.each(function() {
                                     let pb = jQuery(this)
                                     let pb_y = pb.offset().top
-                                    if (pb_y >= page_rollover_threshold.start && pb_y <= page_rollover_threshold.end) {
-                                        let modifier = 1
-                                        if (sender.current_scroll_direction === "up") modifier = 2
-
-                                        sender.next_page = parseInt(pb.data('page')) - modifier
-                                        if (sender.next_page < 0) sender.next_page = 0
-                                    }
+                                    if (pb_y > y_top && pb_y < y_bot) sender.last_pb_scrolled = pb
                                 })
 
-                                if (sender.next_page > -1 && sender.next_page !== sender.current_page) {
-                                    sender.show_letter_image(sender.next_page)
+                                if (sender.last_pb_scrolled) {
+                                    clearTimeout(sender.scroll_timer)
+                                    sender.scroll_timer = setTimeout(() => {
+                                        let page_no = parseInt(sender.last_pb_scrolled.data('page')) - 1
+                                        if (page_no !== sender.current_page) sender.show_letter_image(page_no)
+                                    }, 1000)
                                 }
                             })
 
@@ -1402,7 +1438,19 @@ class LetterViewer {
         let start_pb = this.highlight_page_text()
 
         if(scrollTextIntoView) {
-            start_pb[0].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' })
+            let trans_div_y = sender.transcript_div.offset().top
+            let trans_div_scroll = sender.transcript_div.scrollTop()
+            let start_pb_y = start_pb.offset().top
+            let top_padding = 10
+
+            // scroll up
+            if (start_pb_y < trans_div_y) {
+                let amount = trans_div_y - start_pb_y
+                sender.transcript_div.scrollTop(trans_div_scroll - (amount + top_padding))
+            } else {
+                let amount = start_pb_y - trans_div_y
+                sender.transcript_div.scrollTop(trans_div_scroll + (amount - top_padding))
+            }
         }
     }
 
@@ -1476,6 +1524,31 @@ class LetterViewer {
 
     register_missing_image(image_no) {
         console.log(`missing ${image_no}`)
+    }
+
+    populate_entity_details(entity_tag, tooltip) {
+        let ent_key = `${entity_tag.data('entity_type')}-${entity_tag.data('entity_id')}`
+        if (ent_key in this.entities) {
+            let ent = this.entities[ent_key]
+            let content = `<label class="entity-popup-label">${ent.name}</label>`
+
+            if (ent.uris && ent.uris.length) {
+                content += `<div class="entity-popup-uris">`
+                ent.uris.forEach(uri => {
+                    content += `<a href="${uri}" target="_blank">${uri}</a><br />`
+                })
+                content += `</div>`
+            }
+
+            let search_url =`/letters/?${entity_tag.data('entity_type')}=${entity_tag.data('entity_id')}`
+            content += `
+                      <button type="button" onclick="window.open('${search_url}', '_blank')">
+                        Show letters with this ${entity_tag.data('entity_type').toLowerCase()}
+                      </button>
+                `
+
+            tooltip.setContent(content)
+        }
     }
 }
 
