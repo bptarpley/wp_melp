@@ -1084,6 +1084,10 @@ span.unclear {
     padding: 10px;
 }
 
+.tippy-arrow {
+    color: var(--alt-bg-color);
+}
+
 .tippy-content .entity-popup-label {
     margin-left: 0;
     margin-bottom: 10px;
