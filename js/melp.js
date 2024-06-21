@@ -1373,6 +1373,25 @@ class LetterViewer {
                                 }
                             })
 
+                            // create citation info
+                            let citation_months = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+                            let citation_date = new Date()
+                            let citation_div = jQuery('#letter-citation')
+                            citation_div.html(`
+                                "${letter.title}," <i>Maria Edgeworth Letters Project</i>,${letter.collection ? ` ${letter.collection},` : ''}${letter.repository ? ` Courtesy of ${letter.repository.name}` : ''}. Retrieved from ${window.location.href}, ${citation_months[citation_date.getMonth()]} ${citation_date.getDate()}, ${citation_date.getFullYear()}.  
+                            `)
+                            citation_div.click(function() {
+                                navigator.clipboard.writeText(citation_div.text().trim())
+                            })
+                            tippy(citation_div[0], {
+                                arrow: true,
+                                animation: 'fade',
+                                trigger: 'click',
+                                interactive: true,
+                                allowHTML: true,
+                                content: '<span style="color: black;">Copied to clipboard!</span>',
+                            })
+
                             // show the first page image
                             sender.show_letter_image(0)
                         }
