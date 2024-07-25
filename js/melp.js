@@ -392,11 +392,9 @@ class MELP {
         }
         else if (this.medium === 'mobile') {
             // fix nav
-            console.log('mobile adjustments...')
             this.nav.nav_menu.appendTo(this.nav.hamburger_nav_container)
             nav_search_button.html('Search')
             if (this.path !== '/') {
-                console.log('moving search bar...')
                 this.nav.nav_search.appendTo(this.nav.hamburger_search_container)
             }
 
@@ -940,8 +938,6 @@ class AdvancedSearch {
                     sender.date_range.max.year = max.getUTCFullYear()
                     sender.date_range.max.month = max.getUTCMonth() + 1
                     sender.date_range.max.day = max.getUTCDate()
-
-                    console.log(sender.date_range)
                     
                     from_year_box.attr('placeholder', sender.date_range.min.year)
                     from_month_box.attr('placeholder', sender.date_range.min.month)
@@ -1269,14 +1265,14 @@ class LetterViewer {
 
                             // set metadata fields
                             jQuery('#letter-xml-link').attr('href', `${sender.melp.github_prefix}${sender.letter_id}`)
-                            jQuery('#letter-metadata-author').html(letter.author ? letter.author.name : 'N/A')
-                            jQuery('#letter-metadata-transcriber').html(letter.transcriber ? letter.transcriber : 'N/A')
-                            jQuery('#letter-metadata-repository').html(letter.repository ? letter.repository.name : 'N/A')
-                            jQuery('#letter-metadata-recipient').html(letter.recipient ? letter.recipient.name : 'N/A')
-                            jQuery('#letter-metadata-first-edition-date').html(date_transcribed)
-                            jQuery('#letter-metadata-collection').html(letter.collection ? letter.collection : 'N/A')
-                            jQuery('#letter-metadata-written-date').html(date_composed)
-                            jQuery('#letter-metadata-general-editors').html(letter.general_editors ? letter.general_editors : 'N/A')
+                            sender.set_metadata_field('author', letter.author ? letter.author.name : null)
+                            sender.set_metadata_field('transcriber', letter.transcriber)
+                            sender.set_metadata_field('repository', letter.repository ? letter.repository.name : null)
+                            sender.set_metadata_field('recipient', letter.recipient ? letter.recipient.name : null)
+                            sender.set_metadata_field('first-edition-date', date_transcribed)
+                            sender.set_metadata_field('collection', letter.collection)
+                            sender.set_metadata_field('written-date', date_composed)
+                            sender.set_metadata_field('general-editors', letter.general_editors)
 
                             // build thumbnails
                             letter.images.forEach((image, image_index) => {
@@ -1399,6 +1395,14 @@ class LetterViewer {
                 )
             }
         )
+    }
+
+    set_metadata_field(field, value) {
+        if (value) {
+            jQuery(`#letter-metadata-${field}`).html(value)
+        } else {
+            jQuery(`#letter-metadata-${field}-div`).hide()
+        }
     }
 
     show_top_of_letter() {
