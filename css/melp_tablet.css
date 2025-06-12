@@ -1,0 +1,40 @@
+@media (max-width: 1119px) {
+    #nav-container #nav-search-bar {
+        width: 150px;
+    }
+    #nav-container #nav-search-button {
+        padding: 8px;
+        font-size: 12px;
+        width: unset;
+        white-space: nowrap;
+    }
+    #nav-container #nav-menu {
+        justify-content: flex-start;
+    }
+
+    #masthead-left-col, masthead-right-col {
+        display: none;
+    }
+
+    #masthead.homepage {
+        display: flex;
+        align-items: flex-start;
+        min-height: unset;
+        width: 100%;
+        padding: 0 max(calc((100vw - 1232px) / 2), calc(15vw / 2));
+        background-image: url('../img/masthead-right-col.png');
+        background-position: center right;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-color: var(--masthead-bg-color);
+    }
+
+    #masthead-center-col {
+        padding-top: 60px;
+    }
+
+    #masthead-title-and-description {
+        background-color: var(--masthead-bg-color);
+        opacity: 0.7;
+    }
+}

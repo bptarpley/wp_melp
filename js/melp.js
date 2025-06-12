@@ -9,9 +9,10 @@ class MELP {
         this.iiif_prefix = iiif_prefix
         this.github_prefix = github_prefix
         this.breakpoints = {
-            mobile: 767
+            mobile: 799
         }
         this.medium = this.determine_medium()
+        this.resizeTimer = null
         this.nav = null
         this.advanced_search = null
         this.letter_viewer = null
@@ -101,9 +102,12 @@ class MELP {
 
         // FOOTER
         let footer_container = jQuery('#footer-container')
-        if (footer_container.length) this.load_template(footer_container, 'footer.html', function() { sender.adjust_for_screen_size() }, true)
+        if (footer_container.length) this.load_template(footer_container, 'footer.html', function() { setTimeout(() => sender.adjust_for_screen_size(), 1000) }, true)
 
-        jQuery(window).on('resize', function() { sender.adjust_for_screen_size() })
+        jQuery(window).on('resize', function() {
+            clearTimeout(sender.resizeTimer)
+            sender.resizeTimer = setTimeout(() => sender.adjust_for_screen_size(), 500)
+        })
     }
 
     make_request(path, type, params={}, callback, inject_host=true, spool=false, spool_records=[]) {
@@ -360,9 +364,11 @@ class MELP {
         if (this.medium === 'desktop' && last_medium === 'mobile') {
             // fix nav
             nav_search_button.html('Search Letters')
-            if (this.path !== '/') this.nav.nav_search.appendTo(this.nav.nav_container)
-
-            this.nav.nav_menu.appendTo(this.nav.nav_container)
+            if (!['/', '/letters/'].includes(this.path)) {
+                let navTitle = jQuery('#nav-title')
+                if (navTitle.length) this.nav.nav_search.appendTo(this.nav.nav_container)
+            }
+            this.nav.nav_menu.appendTo(this.nav.nav_title_and_menu)
 
             // fix letter carousel thumbnails
             jQuery('.letter-carousel-thumbnail').each(function() {
@@ -435,6 +441,7 @@ class Nav {
         this.nav_search = jQuery('#nav-search')
         this.nav_search_box = jQuery('#nav-search-bar')
         this.nav_search_button = jQuery('#nav-search-button')
+        this.nav_title_and_menu = jQuery('#nav-title-and-menu')
         this.nav_title = jQuery('#nav-title')
         this.nav_menu = jQuery('#nav-menu')
         this.masthead = jQuery('#masthead')
@@ -472,7 +479,9 @@ class Nav {
 
         if (sender.melp.path === '/') {
             // add homepage class
+            sender.element.addClass('homepage')
             sender.nav_container.addClass('homepage')
+            sender.masthead.addClass('homepage')
 
             // cleanup
             sender.melp.clean_elementor_widget(sender.masthead_project_description)
@@ -482,12 +491,11 @@ class Nav {
                 sender.nav_title.appendTo(sender.masthead_title_and_description)
                 sender.masthead_project_description.contents().appendTo(sender.masthead_title_and_description)
 
-                sender.masthead.append(`
+                sender.masthead_byline.contents().appendTo(sender.masthead_title_and_description)
+                sender.masthead_title_and_description.append(`
                     <a id="masthead-about-button" href="/about">About the Project</a>
                 `)
-
-                sender.masthead_byline.contents().appendTo(sender.masthead)
-                sender.nav_search.appendTo(sender.masthead)
+                //sender.nav_search.appendTo(sender.masthead_title_and_description)
             }
         } else if (sender.melp.path.startsWith('/about')) {
             jQuery('#nav-menu-about').addClass('current')
@@ -516,7 +524,8 @@ class Nav {
 
         if (this.melp.path === '/') {
             this.nav_title.prependTo(this.masthead_title_and_description)
-            this.nav_search.appendTo(this.masthead)
+            let browseBy = jQuery('#browse-by-container')
+            if (browseBy.length) this.nav_search.prependTo(browseBy)
         } else {
             this.nav_title.prependTo(this.nav_container)
         }
@@ -527,6 +536,7 @@ class Nav {
 class Browser {
     constructor(melp_instance) {
         this.melp = melp_instance
+        this.container = jQuery('#browse-by-container')
         this.tray = jQuery('#browse-by-tray')
         this.sort_box = jQuery('#browse-by-sort-box')
         this.index_box = jQuery('#browse-by-index')
@@ -539,6 +549,8 @@ class Browser {
         this.loaded = false
 
         let sender = this
+
+        sender.adjust_nav_search()
 
         jQuery('.browse-by-pill').click(function() {
             let pill = jQuery(this)
@@ -553,6 +565,14 @@ class Browser {
         this.sort_box.change(function() {
             sender.sort_index()
         })
+    }
+
+    adjust_nav_search() {
+        let nav_search = jQuery('#nav-search')
+        if (nav_search.length) nav_search.prependTo(this.container)
+        else { setTimeout(() => {
+            this.adjust_nav_search()
+        }, 500) }
     }
 
     load_stats(index_to_populate=null) {
@@ -684,8 +704,8 @@ class LetterCarousel {
                     let html = `<div id="${sender.identifier}-slider" class="letter-carousel-slider">`
                     if (element.data('skip_first') && data.records.length) data.records.shift()
 
-                    let image_size_specifier = 'full/,200'
-                    if (sender.melp.screen_size <= sender.melp.breakpoints.mobile) image_size_specifier = 'square/330,'
+                    let image_size_specifier = 'full/300,'
+                    if (sender.melp.screen_size <= sender.melp.breakpoints.mobile) image_size_specifier = 'square/300,'
 
                     data.records.forEach((letter, letter_index) => {
                         let image_url = `${sender.melp.iiif_prefix}%2F${letter.identifier}%2F${letter.images[0]}/${image_size_specifier}/0/default.jpg`
@@ -702,7 +722,7 @@ class LetterCarousel {
                     element.append(html)
 
                     let pager = jQuery(`#${sender.identifier}-pager`)
-                    let letters_visible = Math.max(parseInt(element.width() / 625), 1)
+                    let letters_visible = Math.max(parseInt(element.width() / 1000), 1)
                     let num_pages = Math.ceil(data.records.length / letters_visible)
 
                     for (let page_index = 0; page_index < num_pages; page_index++) {

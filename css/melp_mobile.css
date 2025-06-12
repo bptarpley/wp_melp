@@ -1,26 +1,24 @@
-@media (max-width: 767px) {
-    #top-container {
-        padding-left: 20px;
-        padding-right: 20px;
+@media (max-width: 799px) {
+    h1 { font-size: 26px; }
+
+    #nav-container #nav-title {
+        width: unset;
+        margin-left: unset;
     }
 
-    #nav-container {
-        min-width: unset;
+    #nav-container, #nav-container.homepage {
+        display: flex;
+        justify-content: space-between;
+        height: unset;
+        padding: 0 max(calc((100vw - 1232px) / 2), calc(15vw / 2));
     }
 
-    #masthead-title-and-description #nav-title {
-        font-size: 36px;
+    #nav-container.homepage {
+        position: unset;
     }
 
-    #masthead-title-and-description p {
-        font-size: 16px;
-        padding-left: 0;
-        padding-right: 0;
-    }
-
-    #masthead > p {
-        padding-left: 0;
-        padding-right: 0;
+    #nav-title-and-menu {
+        margin-bottom: unset;
     }
 
     #nav-search {
@@ -41,6 +39,7 @@
             HAMBURGER
      ----------------------*/
     #hamburger-open-button {
+        margin-top: 30px;
         display: block;
         width: 30px;
         height: 20px;
@@ -64,8 +63,10 @@
         justify-content: space-between;
     }
 
-    #hamburger-title-container #nav-title {
-        font-size: 19px;
+    #hamburger-title-container #nav-title,
+    #hamburger-title-container #nav-title a {
+        font-size: 26px;
+        color: var(--default-text-color);
     }
 
     #hamburger-close-button {
@@ -79,6 +80,11 @@
         justify-content: center;
         margin-top: 0px;
         margin-bottom: 30px;
+    }
+
+    #hamburger-search-container #nav-search-bar,
+    #hamburger-search-container #nav-search-button {
+        border: 1px solid var(--control-bg-color);
     }
 
     #hamburger-nav-container {
@@ -97,7 +103,8 @@
 
     #hamburger-nav-container #nav-menu a {
         font-size: 25px;
-        font-weight: 700;
+        font-weight: normal;
+        text-transform: uppercase;
         color: var(--default-text-color);
     }
 
@@ -106,6 +113,28 @@
         flex-direction: column;
         flex-grow: 1;
         justify-content: end;
+    }
+
+
+    /* ---------------------
+         HOMEPAGE MASTHEAD
+     ----------------------*/
+    #masthead-title-and-description #nav-title,
+    #masthead-title-and-description #nav-title a {
+        font-size: 30px !important;
+        line-height: 30px !important;
+    }
+
+    #masthead-title-and-description p {
+        font-size: 16px;
+        line-height: 20px;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    #masthead > p {
+        padding-left: 0;
+        padding-right: 0;
     }
 
 
@@ -319,5 +348,19 @@
         display: flex;
         flex-direction: column;
         gap: 20px;
+    }
+
+
+ /* ---------------------
+   CUSTOM CONTENT PAGES
+ ----------------------*/
+    div.e-con-inner {
+        padding: 20px !important;
+    }
+}
+
+@media (max-width: 767px) {
+    div.e-con-inner {
+        padding: unset !important;
     }
 }
