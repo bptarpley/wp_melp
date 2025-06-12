@@ -178,6 +178,7 @@ details > summary::before {
 
 #top-container.homepage {
     border-bottom: unset;
+    gap: 0;
 }
 
 #nav-container {
