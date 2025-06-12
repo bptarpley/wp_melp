@@ -1228,6 +1228,6 @@ span.unclear {
 /* ---------------------
    CUSTOM CONTENT PAGES
  ----------------------*/
-div.e-con-inner {
+#top-container + div > div.e-con-inner {
     padding: 0 max(calc((100vw - 1232px) / 2), calc(15vw / 2)) !important;
 }
