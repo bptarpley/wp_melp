@@ -459,6 +459,8 @@ class Nav {
 
         let sender = this
 
+        sender.load_navigation()
+
         sender.nav_search_box.keyup(function(e) {
             if (e.key === 'Enter' && sender.nav_search_box.val().length) {
                 window.location.href = `/letters/?search=${sender.nav_search_box.val()}`
@@ -510,6 +512,26 @@ class Nav {
         }
 
         jQuery('.delete-after-load').remove()
+    }
+
+    load_navigation() {
+        let sender = this
+        sender.melp.make_request(
+            `/api/corpus/${sender.melp.corpus_id}/SitePage/`,
+            'GET',
+            {'s_order': 'asc'},
+            function(sitePageInfo) {
+                if (sitePageInfo.records) {
+                    sitePageInfo.records.forEach(function(sitePage) {
+                        let classAttr = ''
+                        if (sender.melp.path.startsWith(sitePage.url)) classAttr = ` class="current"`
+                        sender.nav_menu.append(`
+                            <a href="${sitePage.url}"${classAttr}>${sitePage.title}</a>
+                        `)
+                    })
+                }
+            }
+        )
     }
 
     open_hamburger() {
