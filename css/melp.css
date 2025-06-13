@@ -229,7 +229,7 @@ details > summary::before {
 
 #nav-container a {
     color: var(--masthead-text-color) !important;
-    font-size: 12px;
+    font-size: 14px;
     text-transform: uppercase;
 }
 
