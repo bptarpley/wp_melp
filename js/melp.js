@@ -489,15 +489,17 @@ class Nav {
             sender.melp.clean_elementor_widget(sender.masthead_project_description)
             sender.melp.clean_elementor_widget(sender.masthead_byline)
 
+            // grab content from elementor divs and place appropriately in masthead
             if (sender.masthead.length && sender.nav_title.length && sender.nav_search.length && sender.masthead_project_description.length && sender.masthead_byline.length) {
                 sender.nav_title.appendTo(sender.masthead_title_and_description)
                 sender.masthead_project_description.contents().appendTo(sender.masthead_title_and_description)
 
-                sender.masthead_byline.contents().appendTo(sender.masthead_title_and_description)
+                let byLine = sender.masthead_byline.find('p')
+                byLine.addClass('by-line')
+                byLine.detach().appendTo(sender.masthead_title_and_description)
                 sender.masthead_title_and_description.append(`
                     <a id="masthead-about-button" href="/about">About the Project</a>
                 `)
-                //sender.nav_search.appendTo(sender.masthead_title_and_description)
             }
         } else if (sender.melp.path.startsWith('/about')) {
             jQuery('#nav-menu-about').addClass('current')
@@ -1100,7 +1102,7 @@ class AdvancedSearch {
 
                         results_div.append(`
                             <div id="adv-search-result-${letter.id}" class="adv-search-result" data-id="${letter.id}" data-count="${letter_count}">
-                                <a href="/letters/${letter.identifier}" target="_blank">${letter.title}</a>
+                                <a href="/letters/${letter.identifier}" target="_blank"><h5>${letter.title}</h5></a>
                             </div>
                         `)
 

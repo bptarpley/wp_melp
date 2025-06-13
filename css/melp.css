@@ -60,6 +60,15 @@ h2 {
     text-transform: uppercase !important;
 }
 
+h3 {
+    color: var(--heading-text-color)!important;
+    font-family: var(--default-text-font)!important;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: normal !important;
+    line-height: normal !important;
+}
+
 h5 {
     color: var(--heading-text-color)!important;
     font-family: var(--default-text-font)!important;
@@ -67,8 +76,7 @@ h5 {
     font-style: normal;
     text-transform: none !important;
     font-weight: normal !important;
-    line-height: 35px !important;
-    text-transform: uppercase !important;
+    line-height: 32px !important;
 }
 
 p {
@@ -304,6 +312,10 @@ details > summary::before {
 
 #hamburger-open-button { display: none; }
 
+
+/* ---------------------
+         MASTHEAD
+ ----------------------*/
 #masthead { display: none; }
 
 #masthead.homepage {
@@ -331,15 +343,15 @@ details > summary::before {
     padding: 50px 0;
 }
 
-#masthead-right-col {
-
+#masthead p {
+    font-size: 16px;
+    font-style: normal;
+    line-height: 17px;
+    color: var(--masthead-text-color);
 }
 
-#masthead p {
-    font-size: 12px;
-    font-style: normal;
-    line-height: 16px;
-    color: var(--masthead-text-color);
+#masthead p.by-line {
+    font-size: 14px;
 }
 
 #masthead-title-and-description {
@@ -910,6 +922,10 @@ a.browse-by-pill img {
     border-bottom: solid 1px var(--default-text-color);
 }
 
+.adv-search-result h5 {
+    margin: 0;
+}
+
 #adv-search-modal {
     display: none;
 }
@@ -937,6 +953,10 @@ a.browse-by-pill img {
     margin-right: auto;
     padding-left: 20px;
     padding-right: 20px;
+}
+
+#letter-title {
+    text-transform: unset !important;
 }
 
 #letter-image-thumbs {
