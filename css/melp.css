@@ -1073,6 +1073,8 @@ a.browse-by-pill img {
     line-height: 36px;
 }
 
+#letter-transcript-viewer .fas { display:none; }
+
 /*.page-highlight.active {
     background-color: rgba(0,0,0,0.1);
 }*/
