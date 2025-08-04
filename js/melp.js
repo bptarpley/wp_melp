@@ -485,18 +485,12 @@ class Nav {
             sender.nav_container.addClass('homepage')
             sender.masthead.addClass('homepage')
 
-            // cleanup
-            sender.melp.clean_elementor_widget(sender.masthead_project_description)
-            sender.melp.clean_elementor_widget(sender.masthead_byline)
-
             // grab content from elementor divs and place appropriately in masthead
             if (sender.masthead.length && sender.nav_title.length && sender.nav_search.length && sender.masthead_project_description.length && sender.masthead_byline.length) {
                 sender.nav_title.appendTo(sender.masthead_title_and_description)
-                sender.masthead_project_description.contents().appendTo(sender.masthead_title_and_description)
+                sender.masthead_project_description.detach().appendTo(sender.masthead_title_and_description)
 
-                let byLine = sender.masthead_byline.find('p')
-                byLine.addClass('by-line')
-                byLine.detach().appendTo(sender.masthead_title_and_description)
+                sender.masthead_byline.detach().appendTo(sender.masthead_title_and_description)
                 sender.masthead_title_and_description.append(`
                     <a id="masthead-about-button" href="/about">About the Project</a>
                 `)

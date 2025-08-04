@@ -38,6 +38,7 @@ html, body {
     padding: 10px;
     text-align: center;
     background-color: white;
+    width: 100%;
 }
 
 h1 {
@@ -348,6 +349,7 @@ details > summary::before {
     font-style: normal;
     line-height: 17px;
     color: var(--masthead-text-color);
+    margin-top: 1em;
 }
 
 #masthead p.by-line {
