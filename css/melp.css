@@ -1251,6 +1251,7 @@ span.unclear {
 /* ---------------------
    CUSTOM CONTENT PAGES
  ----------------------*/
-#top-container + div > div.e-con-inner {
+#top-container + div > div.e-con-inner,
+.melp-page-content {
     padding: 0 max(calc((100vw - 1232px) / 2), calc(15vw / 2)) !important;
 }
