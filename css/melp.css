@@ -982,6 +982,7 @@ a.browse-by-pill img {
     display: flex;
     flex-direction: row;
     gap: 20px;
+    width: 100%;
 }
 
 #previous-letter-link {
