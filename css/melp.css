@@ -1255,3 +1255,7 @@ span.unclear {
 .melp-page-content {
     padding: 0 max(calc((100vw - 1232px) / 2), calc(15vw / 2)) !important;
 }
+
+.melp-page-content h1 {
+    margin: 10px 0;
+}
