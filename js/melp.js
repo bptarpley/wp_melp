@@ -1323,10 +1323,10 @@ class LetterViewer {
                                 sender.thumbnail_div.append(`
                                     <img class="letter-thumbnail"
                                     alt="Click to show page ${image_index + 1}"
-                                    src="https://iiif.dh.tamu.edu/iiif/2/MELP%2F${letter.identifier}%2F${image}/full/,110/0/default.jpg"
+                                    src="${sender.melp.iiif_prefix}%2F${letter.identifier}%2F${image}/full/,110/0/default.jpg"
                                     onerror="melp.letter_viewer.register_missing_image(${image_index});"
                                     data-image_no="${image_index}"
-                                    data-iiif_identifier="https://iiif.dh.tamu.edu/iiif/2/MELP%2F${letter.identifier}%2F${image}">
+                                    data-iiif_identifier="${sender.melp.iiif_prefix}%2F${letter.identifier}%2F${image}">
                                 `)
                             })
 
