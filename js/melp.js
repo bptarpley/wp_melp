@@ -1334,6 +1334,19 @@ class LetterViewer {
                             sender.transcript_div.prepend(letter.html)
                             sender.pbs = jQuery('.page-break')
 
+                            // determine whether letter is editor approved
+                            // if not, inject disclaimer message
+                            if (!letter.editor_approved) {
+                                sender.transcript_div.prepend(`
+                                    <div class="alert alert-melp">
+                                        <p>This transcription has not undergone final editorial review. 
+                                        If you would like to suggest a correction to the editors, please email:</p> 
+                                        <p><a href="mailto:mariaedgeworthletters@gmail.com" style="color: var(--page-bg-color);">mariaedgeworthletters@gmail.com</a></p> 
+                                        <p>Please include the letter date, recipient, and URL along with the suggested correction(s).</p>
+                                    </div>
+                                `)
+                            }
+
                             // register entities
                             if (letter.entities_mentioned && letter.entities_mentioned.length) {
                                 letter.entities_mentioned.forEach(ent => {
@@ -1379,6 +1392,37 @@ class LetterViewer {
                                         }
                                     }
                                 })
+                            })
+
+                            // setup column arrangement functionality
+                            let column_arrangement_image = jQuery('#letter-columns-image')
+                            let viewer_row = jQuery('#letter-viewer')
+                            let image_col = jQuery('#letter-image-and-license')
+                            let trans_col = jQuery('#letter-xml-and-transcript')
+                            let sequence_links = jQuery('.letter-sequence-link')
+
+                            column_arrangement_image.click(function() {
+                                if (sender.column_arrangement === 'two-thirds') {
+                                    viewer_row.css('flex-direction', 'row')
+                                    sequence_links.show()
+                                    image_col.css('width', '50%')
+                                    trans_col.css('width', '50%')
+                                    sender.column_arrangement = 'half'
+                                } else if (sender.column_arrangement === 'half') {
+                                    viewer_row.css('flex-direction', 'column')
+                                    sequence_links.hide()
+                                    image_col.css('width', '100%')
+                                    trans_col.css('width', '100%')
+                                    sender.column_arrangement = 'full'
+                                } else if (sender.column_arrangement === 'full') {
+                                    viewer_row.css('flex-direction', 'row')
+                                    sequence_links.show()
+                                    image_col.css('width', '60%')
+                                    trans_col.css('width', '40%')
+                                    sender.column_arrangement = 'two-thirds'
+                                }
+                                let current_image = jQuery('.letter-thumbnail.current').data('image_no')
+                                sender.show_letter_image(current_image, true)
                             })
 
                             // setup "up next" carousel

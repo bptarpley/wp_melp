@@ -5,7 +5,7 @@
  * Description: A plugin for allowing a Wordpress frontend to interface with Corpora
  * Author: Bryan Tarpley
  * Author URI: https://codhr.tamu.edu
- * Version: 1.0.0
+ * Version: 1.0.2
  * License: GPL2+
  * License URI: https://www.gnu.org/licenses/gpl-2.0.txt
  *
@@ -31,6 +31,13 @@
 
 	function melp_corpora_enqueue_scripts()
 	{
+	    // Get plugin version for cache busting
+        if (!function_exists('get_plugin_data')) {
+            require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+        }
+        $plugin_data = get_plugin_data(__FILE__);
+        $plugin_version = $plugin_data['Version'];
+
 		// Register Javascript
 		wp_enqueue_script('jquery');
 		wp_enqueue_script('jquery-mark', plugin_dir_url(__FILE__).'js/jquery.mark.min.js');
@@ -54,7 +61,8 @@
 		        'melp-openseadragon',
 		        'melp-leaflet',
 		        'melp-leaflet-cluster'
-            )
+            ),
+            $plugin_version
         ); //your javascript library
 
 		// Register CSS
@@ -62,7 +70,7 @@
 		wp_enqueue_style('melp-autocomplete-css', plugin_dir_url( __FILE__ ).'css/autoComplete.min.css');
 		wp_enqueue_style('melp-leaflet-css', plugin_dir_url( __FILE__ ).'css/leaflet/leaflet.css');
 		wp_enqueue_style('melp-leaflet-cluster-css', plugin_dir_url( __FILE__ ).'css/MarkerCluster.css');
-		wp_enqueue_style('melp-css', plugin_dir_url( __FILE__ ).'css/melp.css');
+		wp_enqueue_style('melp-css', plugin_dir_url( __FILE__ ).'css/melp.css', array(), $plugin_version);
 		wp_enqueue_style('melp-tablet-css', plugin_dir_url( __FILE__ ).'css/melp_tablet.css');
 		wp_enqueue_style('melp-mobile-css', plugin_dir_url( __FILE__ ).'css/melp_mobile.css');
 	}
