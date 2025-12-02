@@ -1016,7 +1016,20 @@ a.browse-by-pill img {
 #letter-image-and-license {
     width: 60%;
     height: 725px;
-    padding-top: 20px;
+    /*padding-top: 20px;*/
+}
+
+#letter-columns {
+    width: 100%;
+}
+
+#letter-columns-image {
+    display: block;
+    height: 20px;
+    width: auto;
+    margin-right: auto;
+    margin-top: 0px;
+    margin-bottom: 0px;
 }
 
 #letter-image-toolbar {
@@ -1025,8 +1038,10 @@ a.browse-by-pill img {
 
 #letter-image-viewer {
     height: 675px;
-    border-radius: 10px;
-    border: solid 1px var(--heading-text-color);
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border: solid 1px var(--masthead-bg-color);
     overflow: hidden;
 }
 
@@ -1248,6 +1263,10 @@ span.addition {
 
 span.unclear {
     color: gray;
+}
+
+span.entity span.unclear, span.entity span.addition {
+    color: inherit;
 }
 
 .tippy-box {

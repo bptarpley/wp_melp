@@ -1250,6 +1250,7 @@ class LetterViewer {
         this.scroll_timer = null
         this.current_page = 0
         this.entities = {}
+        this.column_arrangement = 'two-thirds'
 
         let sender = this
 
